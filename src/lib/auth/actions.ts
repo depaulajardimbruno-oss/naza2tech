@@ -1,0 +1,103 @@
+"use server";
+/**
+ * Server actions de autenticação.
+ *
+ * Todas retornam `{ error?: string }` para o formulário mostrar a mensagem,
+ * e redirecionam em caso de sucesso. Usadas com `useActionState` nos forms.
+ *
+ * Fluxo de cadastro: o usuário se cadastra sozinho; o trigger
+ * `handle_new_user` no banco cria a linha em `profiles` automaticamente
+ * com role_global = 'user'. Promover a admin e vincular a ministérios é
+ * tarefa do ADM nas telas /admin.
+ */
+import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { z } from "zod";
+import { createClient } from "@/lib/supabase/server";
+
+export type AuthState = { error?: string; ok?: string };
+
+const loginSchema = z.object({
+  email: z.string().email("E-mail inválido"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+});
+
+export async function signIn(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const parsed = loginSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  if (error) {
+    return {
+      error:
+        error.message === "Invalid login credentials"
+          ? "E-mail ou senha incorretos"
+          : error.message === "Email not confirmed"
+            ? "Confirme seu e-mail antes de entrar"
+            : error.message,
+    };
+  }
+
+  const next = String(formData.get("next") ?? "") || "/dashboard";
+  redirect(next.startsWith("/") ? next : "/dashboard");
+}
+
+const signUpSchema = loginSchema.extend({
+  full_name: z.string().trim().min(3, "Informe seu nome completo"),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^\(?\d{2}\)?\s?9?\d{4}-?\d{4}$/, "Celular inválido (ex.: 11 99999-9999)")
+    .optional()
+    .or(z.literal("")),
+});
+
+export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const parsed = signUpSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+    full_name: formData.get("full_name"),
+    phone: formData.get("phone"),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  const origin = (await headers()).get("origin") ?? "";
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signUp({
+    email: parsed.data.email,
+    password: parsed.data.password,
+    options: {
+      // Esses metadados são lidos pelo trigger handle_new_user
+      data: { full_name: parsed.data.full_name, phone: parsed.data.phone || null },
+      emailRedirectTo: `${origin}/auth/callback`,
+    },
+  });
+  if (error) return { error: error.message };
+
+  // Se a confirmação de e-mail estiver desligada no Supabase, já há sessão.
+  if (data.session) redirect("/dashboard");
+  return { ok: "Cadastro feito. Verifique seu e-mail para confirmar a conta." };
+}
+
+export async function resetPassword(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const email = String(formData.get("email") ?? "");
+  if (!z.string().email().safeParse(email).success) return { error: "E-mail inválido" };
+
+  const origin = (await headers()).get("origin") ?? "";
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/callback?next=/conta`,
+  });
+  if (error) return { error: error.message };
+  return { ok: "Se o e-mail existir, enviamos um link para redefinir a senha." };
+}
+
+export async function signOut() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/login");
+}
