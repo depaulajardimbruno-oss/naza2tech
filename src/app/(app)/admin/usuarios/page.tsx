@@ -1,4 +1,4 @@
-/** Usuários cadastrados: promover a ADM, ativar/desativar. */
+/** Usuários: criar conta (ADM), promover a ADM, ativar/desativar. */
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/session";
 import { setUserAdmin, setUserActive } from "@/lib/actions/users";
@@ -6,6 +6,8 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ActionSwitch } from "@/components/forms/action-switch";
 import { Badge } from "@/components/ui/badge";
+import { adminClientConfigured } from "@/lib/supabase/admin";
+import { NewUserDialog } from "./new-user-dialog";
 
 export default async function UsuariosPage() {
   const s = await requireAdmin();
@@ -14,13 +16,22 @@ export default async function UsuariosPage() {
     .from("profiles")
     .select("id, full_name, email, phone, role_global, active, ministry_members(ministry:ministries(name))")
     .order("full_name");
+  const { data: ministries } = await supabase.from("ministries").select("id, name").eq("is_active", true).order("name");
+  const canCreate = adminClientConfigured();
 
   return (
     <>
       <PageHeader
         title="Usuários"
-        description="Todos que se cadastraram. Vincule a ministérios na página de cada ministério."
-      />
+        description="Quem se cadastrou e quem você criou. Vincule a ministérios aqui ou na página de cada ministério."
+      >
+        <NewUserDialog ministries={ministries ?? []} enabled={canCreate} />
+      </PageHeader>
+      {!canCreate && (
+        <p className="mb-4 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm">
+          Para criar usuários pelo painel, falta a variável <code>SUPABASE_SERVICE_ROLE_KEY</code> na Vercel.
+        </p>
+      )}
       <Table>
         <TableHeader>
           <TableRow>

@@ -52,6 +52,9 @@ supabase/
 ## Cultos fixos
 Tabela `event_templates` (dia da semana + horário). A função `materialize_fixed_events()` cria os eventos reais das próximas 8 semanas e roda todo dia 03:00 (pg_cron). Datas já geradas ficam em `event_template_runs`, então um culto apagado de propósito não volta. Migration: `20261117000000_eventos_fixos.sql`.
 
+## Criar usuário pelo painel (ADM)
+`/admin/usuarios` → **Novo usuário**: cria a conta já confirmada com senha provisória (mostrada uma vez, com mensagem pronta para WhatsApp) e já vincula ministérios. Usa `src/lib/supabase/admin.ts` (service role, só servidor) e exige `SUPABASE_SERVICE_ROLE_KEY` nas variáveis da Vercel. Não usamos convite por e-mail porque o SMTP padrão do Supabase não entrega para endereços externos de forma confiável.
+
 ## Identidade visual
 Paleta e fontes vêm do site institucional (https://naza2-campinas.leo-ehrhardt82.workers.dev/): tema escuro, azul `#2f7bff` / `#5fb0ff`, títulos em **Unbounded**, texto em **Manrope**, botões em pílula. Os tokens estão em `src/app/globals.css` (prefixo `--naza-*`) e são mapeados para as variáveis do shadcn, então trocar a cor da marca é mexer em um lugar só. Para usar o logo oficial, coloque `public/logo.jpg` e ajuste `src/components/layout/brand.tsx`.
 
