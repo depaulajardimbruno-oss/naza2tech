@@ -3,8 +3,7 @@
  * `canDelete(event)` decide se mostra o botão de remover (UX; o RLS é a barreira real).
  */
 import { Badge } from "@/components/ui/badge";
-import { ActionButton } from "@/components/forms/action-button";
-import { deleteEvent } from "@/lib/actions/events";
+import { DeleteEventButton } from "./delete-event-button";
 import { formatDay, hhmm } from "@/lib/format";
 import type { Tables } from "@/types/database";
 
@@ -32,16 +31,7 @@ export function EventsList({ events, canDelete }: { events: EventRow[]; canDelet
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <Badge variant={e.ministry ? "secondary" : "outline"}>{e.ministry?.name ?? "Igreja"}</Badge>
-                  {canDelete(e) && (
-                    <ActionButton
-                      size="sm"
-                      variant="ghost"
-                      confirm={`Remover "${e.title}"?`}
-                      action={() => deleteEvent(e.id)}
-                    >
-                      Remover
-                    </ActionButton>
-                  )}
+                  {canDelete(e) && <DeleteEventButton id={e.id} title={e.title} />}
                 </div>
               </li>
             ))}
