@@ -1,13 +1,15 @@
 /**
  * AGENDA DA IGREJA — todo usuário logado vê todos os eventos.
  *
- * Filtros (via query string, funcionam sem JS e são compartilháveis por link):
- *   ?ministerio=<uuid> | geral   (vazio = todos)
- *   ?periodo=proximos|semana|mes|passados   (padrão: proximos)
- *   ?q=texto                      (busca no título)
+ * Duas visões (?vista=):
+ *   mes   (padrão) calendário em grade, navegável por mês (?mes=YYYY-MM) e por dia (?dia=YYYY-MM-DD)
+ *   lista  eventos agrupados por dia, com período (?periodo=proximos|semana|mes|passados)
+ *
+ * Filtros (valem nas duas visões; ficam na URL, então o link é compartilhável):
+ *   ?ministerio=<uuid> | geral   (vazio = todos)      ?q=texto (busca no título)
  *
  * Quem cria eventos: ADM (qualquer) e líder (do seu ministério) — ver /admin/eventos
- * e /lider/[id]/eventos. Aqui é só leitura.
+ * e /lider/[id]/eventos. Aqui é só leitura (e remover, se tiver permissão).
  */
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -15,92 +17,141 @@ import { getSession } from "@/lib/auth/session";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/layout/empty-state";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/select";
 import { EventsList, type EventRow } from "@/components/events/events-list";
-import { todayBR } from "@/lib/format";
+import { AgendaFilters } from "@/components/events/agenda-filters";
+import { MonthCalendar } from "@/components/events/month-calendar";
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { monthTitle, monthWeeks, shiftMonth, todayBR } from "@/lib/format";
 
-const PERIODS = {
-  proximos: "Próximos",
-  semana: "Próximos 7 dias",
-  mes: "Próximos 30 dias",
-  passados: "Já aconteceram",
-} as const;
-type Period = keyof typeof PERIODS;
+const PERIODS = ["proximos", "semana", "mes", "passados"] as const;
+type Period = (typeof PERIODS)[number];
 
 export default async function AgendaPage({ searchParams }: PageProps<"/agenda">) {
   const sp = await searchParams;
   const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
+
+  const today = todayBR();
+  const vista = one(sp.vista) === "lista" ? "lista" : "mes";
   const ministerio = one(sp.ministerio);
   const q = one(sp.q).trim();
-  const periodo: Period = one(sp.periodo) in PERIODS ? (one(sp.periodo) as Period) : "proximos";
+  const periodo: Period = (PERIODS as readonly string[]).includes(one(sp.periodo)) ? (one(sp.periodo) as Period) : "proximos";
+  const mes = /^\d{4}-(0[1-9]|1[0-2])$/.test(one(sp.mes)) ? one(sp.mes) : today.slice(0, 7);
+  const diaParam = /^\d{4}-\d{2}-\d{2}$/.test(one(sp.dia)) ? one(sp.dia) : "";
+
+  /** Query string atual (sem vazios), usada para montar links preservando os filtros. */
+  const current: Record<string, string> = {};
+  for (const [k, v] of Object.entries({ vista, ministerio, q, periodo: vista === "lista" ? periodo : "", mes: vista === "mes" ? mes : "", dia: diaParam })) {
+    if (v && !(k === "vista" && v === "mes")) current[k] = v;
+  }
+  const href = (over: Record<string, string>) => {
+    const p = new URLSearchParams({ ...current, ...over });
+    for (const [k, v] of [...p.entries()]) if (!v) p.delete(k);
+    return `/agenda?${p.toString()}`;
+  };
 
   const supabase = await createClient();
-  const today = todayBR();
+  let query = supabase.from("events").select("*, ministry:ministries(id, name)");
 
-  let query = supabase
-    .from("events")
-    .select("*, ministry:ministries(id, name)")
-    .limit(300);
-
-  if (periodo === "passados") query = query.lt("event_date", today).order("event_date", { ascending: false });
-  else {
-    query = query.gte("event_date", today).order("event_date").order("start_time");
-    if (periodo === "semana") query = query.lte("event_date", todayBR(7));
-    if (periodo === "mes") query = query.lte("event_date", todayBR(30));
+  const weeks = monthWeeks(mes);
+  if (vista === "mes") {
+    query = query
+      .gte("event_date", weeks[0][0].date)
+      .lte("event_date", weeks[weeks.length - 1][6].date)
+      .order("event_date")
+      .order("start_time")
+      .limit(1000);
+  } else {
+    query = query.limit(300);
+    if (periodo === "passados") query = query.lt("event_date", today).order("event_date", { ascending: false });
+    else {
+      query = query.gte("event_date", today).order("event_date").order("start_time");
+      if (periodo === "semana") query = query.lte("event_date", todayBR(7));
+      if (periodo === "mes") query = query.lte("event_date", todayBR(30));
+    }
   }
   if (ministerio === "geral") query = query.is("ministry_id", null);
   else if (ministerio) query = query.eq("ministry_id", ministerio);
   if (q) query = query.ilike("title", `%${q.replace(/[%,]/g, " ")}%`);
 
-  const [{ data: events }, { data: ministries }, session] = await Promise.all([
+  const [{ data }, { data: ministries }, session] = await Promise.all([
     query,
     supabase.from("ministries").select("id, name").eq("is_active", true).order("name"),
     getSession(),
   ]);
+  const events = (data ?? []) as EventRow[];
 
   const canDelete = (e: EventRow) =>
     !!session && (session.isAdmin || (e.ministry_id !== null && session.leaderOf.includes(e.ministry_id)));
-  const filtered = !!(ministerio || q || periodo !== "proximos");
+
+  // Calendário: agrupa por dia e escolhe o dia em destaque (o clicado, ou hoje se estiver no mês)
+  const byDate: Record<string, EventRow[]> = {};
+  for (const e of events) (byDate[e.event_date] ??= []).push(e);
+  const selected = diaParam || (today.startsWith(mes) ? today : null);
+  const selectedEvents = selected ? (byDate[selected] ?? []) : [];
+
+  const tab = (active: boolean) =>
+    `rounded-full px-3 py-1.5 text-sm ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`;
 
   return (
     <>
-      <PageHeader title="Agenda" description="Tudo que acontece na igreja e nos ministérios." />
-
-      <form className="mb-6 grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]" method="get">
-        <Input name="q" defaultValue={q} placeholder="Buscar evento..." aria-label="Buscar evento" />
-        <NativeSelect name="ministerio" defaultValue={ministerio} aria-label="Ministério">
-          <option value="">Todos os ministérios</option>
-          <option value="geral">Igreja (geral)</option>
-          {ministries?.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.name}
-            </option>
-          ))}
-        </NativeSelect>
-        <NativeSelect name="periodo" defaultValue={periodo} aria-label="Período">
-          {Object.entries(PERIODS).map(([k, label]) => (
-            <option key={k} value={k}>
-              {label}
-            </option>
-          ))}
-        </NativeSelect>
-        <div className="flex gap-2">
-          <Button type="submit">Filtrar</Button>
-          {filtered && (
-            <Button asChild variant="ghost">
-              <Link href="/agenda">Limpar</Link>
-            </Button>
-          )}
+      <PageHeader title="Agenda" description="Tudo que acontece na igreja e nos ministérios.">
+        <div className="flex rounded-full border p-0.5">
+          <Link href={href({ vista: "mes", periodo: "" })} className={tab(vista === "mes")}>
+            Calendário
+          </Link>
+          <Link href={href({ vista: "lista", mes: "", dia: "" })} className={tab(vista === "lista")}>
+            Lista
+          </Link>
         </div>
-      </form>
+      </PageHeader>
 
-      {events?.length ? (
-        <EventsList events={events as EventRow[]} canDelete={canDelete} />
+      <AgendaFilters ministries={ministries ?? []} params={current} />
+
+      {vista === "mes" ? (
+        <>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">{monthTitle(mes)}</h2>
+            <div className="flex items-center gap-1">
+              <Button asChild variant="ghost" size="icon" aria-label="Mês anterior">
+                <Link href={href({ mes: shiftMonth(mes, -1), dia: "" })}>
+                  <ChevronLeftIcon />
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm">
+                <Link href={href({ mes: today.slice(0, 7), dia: today })}>Hoje</Link>
+              </Button>
+              <Button asChild variant="ghost" size="icon" aria-label="Próximo mês">
+                <Link href={href({ mes: shiftMonth(mes, 1), dia: "" })}>
+                  <ChevronRightIcon />
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          <MonthCalendar
+            weeks={weeks}
+            byDate={byDate}
+            today={today}
+            selected={selected}
+            hrefFor={(date) => href({ dia: date })}
+          />
+
+          <div className="mt-6">
+            {selectedEvents.length ? (
+              <EventsList events={selectedEvents} canDelete={canDelete} />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {selected ? "Nenhum evento neste dia." : "Toque em um dia para ver os eventos."}
+              </p>
+            )}
+          </div>
+        </>
+      ) : events.length ? (
+        <EventsList events={events} canDelete={canDelete} />
       ) : (
         <EmptyState
-          title={filtered ? "Nada com esses filtros" : "Agenda vazia"}
-          description={filtered ? "Tente outro ministério ou período." : "Os eventos aparecem aqui assim que forem cadastrados."}
+          title={ministerio || q || periodo !== "proximos" ? "Nada com esses filtros" : "Agenda vazia"}
+          description="Tente outro ministério ou período."
         />
       )}
     </>
