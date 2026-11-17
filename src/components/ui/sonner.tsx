@@ -3,7 +3,7 @@
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 
 function Toaster(props: ToasterProps) {
-  return <Sonner position="top-center" richColors closeButton {...props} />;
+  return <Sonner position="top-center" richColors closeButton theme="dark" {...props} />;
 }
 
 export { Toaster };

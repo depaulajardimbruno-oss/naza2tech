@@ -1,66 +1,62 @@
 /*
- * Estilos globais + tokens de tema (padrão shadcn/ui para Tailwind v4).
+ * Estilos globais + tokens de tema.
  *
- * As variáveis em :root / .dark são as cores semânticas usadas pelos
- * componentes em src/components/ui. Para trocar a identidade visual da
- * igreja, mude só `--primary` e `--primary-foreground`.
+ * Paleta e tipografia copiadas do site institucional da Naza2 Campinas
+ * (https://naza2-campinas.leo-ehrhardt82.workers.dev/):
+ *   fundo #04060b · fundo2 #080c16 · card #0c1220 · linha rgba(255,255,255,.08)
+ *   texto #f4f7ff · muted #93a0b8 · azul #2f7bff · azul claro #5fb0ff · deep #0a2a6b
+ *   títulos: Unbounded · texto: Manrope · botões em pílula
+ *
+ * O app é DARK por padrão (mesmo do site). As variáveis abaixo alimentam os
+ * componentes de src/components/ui no padrão shadcn (bg-primary, text-muted-foreground...).
  */
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.45 0.16 265);          /* azul-índigo: cor da marca */
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --success: oklch(0.6 0.17 150);           /* verde: confirmado */
-  --warning: oklch(0.8 0.17 85);            /* amarelo: pendente */
-}
+  --radius: 0.875rem;
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.7 0.14 265);
-  --primary-foreground: oklch(0.145 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --success: oklch(0.7 0.17 150);
-  --warning: oklch(0.85 0.17 85);
+  /* tokens da marca (nomes iguais aos do site) */
+  --naza-bg: #04060b;
+  --naza-bg2: #080c16;
+  --naza-card: #0c1220;
+  --naza-line: rgba(255, 255, 255, 0.08);
+  --naza-white: #f4f7ff;
+  --naza-muted: #93a0b8;
+  --naza-blue: #2f7bff;
+  --naza-blue2: #5fb0ff;
+  --naza-deep: #0a2a6b;
+  --naza-glow: 0 0 40px rgba(47, 123, 255, 0.45);
+
+  /* mapeamento para os componentes (shadcn) */
+  --background: var(--naza-bg);
+  --foreground: var(--naza-white);
+  --card: var(--naza-card);
+  --card-foreground: var(--naza-white);
+  --popover: var(--naza-bg2);
+  --popover-foreground: var(--naza-white);
+  --primary: var(--naza-blue);
+  --primary-foreground: #ffffff;
+  --secondary: rgba(255, 255, 255, 0.06);
+  --secondary-foreground: var(--naza-white);
+  --muted: rgba(255, 255, 255, 0.04);
+  --muted-foreground: var(--naza-muted);
+  --accent: rgba(47, 123, 255, 0.12);
+  --accent-foreground: var(--naza-white);
+  --destructive: #ff3b5c;
+  --border: var(--naza-line);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: var(--naza-blue2);
+  --success: #25d366;   /* verde do site (botão WhatsApp) = confirmado */
+  --warning: #f5b740;   /* pendente */
 }
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 6px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -81,14 +77,32 @@
   --color-ring: var(--ring);
   --color-success: var(--success);
   --color-warning: var(--warning);
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --color-blue2: var(--naza-blue2);
+  --color-deep: var(--naza-deep);
+  --color-bg2: var(--naza-bg2);
+  --font-sans: "Manrope", system-ui, sans-serif;
+  --font-display: "Unbounded", system-ui, sans-serif;
+  --shadow-glow: var(--naza-glow);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    color-scheme: dark;
+  }
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans antialiased;
+    background-image: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(47, 123, 255, 0.18), transparent);
+    background-repeat: no-repeat;
+  }
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+  ::selection {
+    background: var(--naza-blue);
+    color: #fff;
   }
 }

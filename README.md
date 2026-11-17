@@ -43,6 +43,12 @@ supabase/
 └─ functions/send-reminders/     Edge Function de lembretes (Fase 3)
 ```
 
+## Identidade visual
+Paleta e fontes vêm do site institucional (https://naza2-campinas.leo-ehrhardt82.workers.dev/): tema escuro, azul `#2f7bff` / `#5fb0ff`, títulos em **Unbounded**, texto em **Manrope**, botões em pílula. Os tokens estão em `src/app/globals.css` (prefixo `--naza-*`) e são mapeados para as variáveis do shadcn, então trocar a cor da marca é mexer em um lugar só. Para usar o logo oficial, coloque `public/logo.jpg` e ajuste `src/components/layout/brand.tsx`.
+
+## Dados iniciais
+`supabase/seed.sql` cadastra os 16 ministérios do site com cargos sugeridos. É idempotente; rode no SQL Editor quando precisar recriar.
+
 ## Convenções
 - **Server actions** ficam em `src/lib/actions/<dominio>.ts` (ou `actions.ts` ao lado da página quando são locais). Toda action chama `requireAdmin()` / `requireLeaderOf()` antes de tocar no banco e devolve `{ error?, ok? }`.
 - **Formulários** usam `useActionState` + `<SubmitButton>` + `<FormMessage>`. Controles soltos (switch, select na tabela) usam `ActionSwitch` / `ActionSelect` / `ActionButton`, que mostram toast.

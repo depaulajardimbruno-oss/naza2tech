@@ -19,6 +19,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Brand } from "@/components/layout/brand";
 import { signOut } from "@/lib/auth/actions";
 
 export type NavItem = {
@@ -55,9 +56,9 @@ export function AppShell({
   return (
     <div className="flex min-h-screen">
       {/* Sidebar desktop */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r bg-card md:flex">
-        <div className="flex h-14 items-center gap-2 border-b px-4 font-semibold">
-          <ChurchIcon className="size-5 text-primary" /> Escalas
+      <aside className="hidden w-60 shrink-0 flex-col border-r bg-bg2/60 md:flex">
+        <div className="flex h-16 items-center border-b px-4">
+          <Brand />
         </div>
         <nav className="flex-1 space-y-4 p-3">
           {groups.map((g) => (
@@ -75,8 +76,8 @@ export function AppShell({
                         <Link
                           href={n.href}
                           className={cn(
-                            "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent",
-                            isActive(n.href) && "bg-accent font-medium"
+                            "flex items-center gap-2 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-white/5 hover:text-foreground",
+                            isActive(n.href) && "bg-accent text-blue2 font-medium"
                           )}
                         >
                           <Icon className="size-4" /> {n.label}
@@ -100,10 +101,8 @@ export function AppShell({
 
       {/* Conteúdo */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center justify-between border-b px-4 md:hidden">
-          <span className="flex items-center gap-2 font-semibold">
-            <ChurchIcon className="size-5 text-primary" /> Escalas
-          </span>
+        <header className="flex h-16 items-center justify-between border-b bg-bg2/80 px-4 backdrop-blur md:hidden">
+          <Brand />
           <Link href="/conta" className="text-sm text-muted-foreground">
             {userName.split(" ")[0]}
           </Link>
@@ -112,7 +111,7 @@ export function AppShell({
       </div>
 
       {/* Barra inferior mobile */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t bg-card md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t bg-bg2/90 backdrop-blur md:hidden">
         {mobileItems.map((n) => {
           const Icon = ICONS[n.icon];
           return (
@@ -121,7 +120,7 @@ export function AppShell({
               href={n.href}
               className={cn(
                 "flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] text-muted-foreground",
-                isActive(n.href) && "text-primary"
+                isActive(n.href) && "text-blue2"
               )}
             >
               <Icon className="size-5" /> {n.label}
@@ -132,7 +131,7 @@ export function AppShell({
           href="/conta"
           className={cn(
             "flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] text-muted-foreground",
-            isActive("/conta") && "text-primary"
+            isActive("/conta") && "text-blue2"
           )}
         >
           <UserIcon className="size-5" /> Conta
