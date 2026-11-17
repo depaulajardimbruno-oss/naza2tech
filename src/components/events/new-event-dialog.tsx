@@ -5,7 +5,14 @@ import { PlusIcon } from "lucide-react";
 import { createEvent } from "@/lib/actions/events";
 import type { ActionState } from "@/lib/actions/types";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,11 +22,14 @@ import { FormMessage } from "@/components/forms/form-message";
 export function NewEventDialog({ ministryId }: { ministryId: string | null }) {
   const [open, setOpen] = useState(false);
   // Fecha o diálogo quando a action devolve sucesso.
-  const [state, action] = useActionState<ActionState, FormData>(async (prev, fd) => {
-    const result = await createEvent(prev, fd);
-    if (result.ok) setOpen(false);
-    return result;
-  }, {});
+  const [state, action] = useActionState<ActionState, FormData>(
+    async (prev, fd) => {
+      const result = await createEvent(prev, fd);
+      if (result.ok) setOpen(false);
+      return result;
+    },
+    {},
+  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -36,7 +46,13 @@ export function NewEventDialog({ ministryId }: { ministryId: string | null }) {
           <input type="hidden" name="ministry_id" value={ministryId ?? ""} />
           <div className="space-y-2">
             <Label htmlFor="title">Título</Label>
-            <Input id="title" name="title" placeholder="Ex.: Culto de domingo" required autoFocus />
+            <Input
+              id="title"
+              name="title"
+              placeholder="Ex.: Culto de domingo"
+              required
+              autoFocus
+            />
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">

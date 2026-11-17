@@ -2,7 +2,7 @@
 /**
  * Filtros da agenda. Cada mudança atualiza a URL na hora (sem botão "Filtrar"),
  * então o filtro vale para o calendário e para a lista e dá para compartilhar o link.
- *   Atalhos: Todos | Igreja (eventos gerais)   +  seletor de ministério  +  busca.
+ *   Atalhos: Todos | Minhas escalas | Igreja (eventos gerais)  +  seletor de ministério  +  busca.
  * `params` vem do servidor com a query string atual (evita useSearchParams/Suspense).
  */
 import { useRouter } from "next/navigation";
@@ -29,11 +29,21 @@ export function AgendaFilters({
   const [pending, start] = useTransition();
   const ministerio = params.ministerio ?? "";
   const lista = params.vista === "lista";
+  const minhas = params.minhas === "1";
 
   function set(key: string, value: string) {
     const p = new URLSearchParams(params);
     if (value) p.set(key, value);
     else p.delete(key);
+    start(() => router.replace(`/agenda?${p.toString()}`, { scroll: false }));
+  }
+
+  function setMany(values: Record<string, string>) {
+    const p = new URLSearchParams(params);
+    for (const [k, v] of Object.entries(values)) {
+      if (v) p.set(k, v);
+      else p.delete(k);
+    }
     start(() => router.replace(`/agenda?${p.toString()}`, { scroll: false }));
   }
 
@@ -54,10 +64,17 @@ export function AgendaFilters({
     >
       <button
         type="button"
-        className={pill(ministerio === "")}
-        onClick={() => set("ministerio", "")}
+        className={pill(ministerio === "" && !minhas)}
+        onClick={() => setMany({ ministerio: "", minhas: "" })}
       >
         Todos
+      </button>
+      <button
+        type="button"
+        className={pill(minhas)}
+        onClick={() => set("minhas", minhas ? "" : "1")}
+      >
+        Minhas escalas
       </button>
       <button
         type="button"

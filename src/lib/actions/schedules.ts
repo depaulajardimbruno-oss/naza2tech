@@ -28,6 +28,7 @@ function refresh(ministryId?: string) {
     revalidatePath(`/ministerios/${ministryId}`);
   }
   revalidatePath("/minha-agenda");
+  revalidatePath("/agenda");
   revalidatePath("/dashboard");
 }
 

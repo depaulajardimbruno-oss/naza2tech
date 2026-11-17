@@ -8,9 +8,20 @@
 import { ActionButton } from "@/components/forms/action-button";
 import { deleteEvent } from "@/lib/actions/events";
 
-export function DeleteEventButton({ id, title }: { id: string; title: string }) {
+export function DeleteEventButton({
+  id,
+  title,
+}: {
+  id: string;
+  title: string;
+}) {
   return (
-    <ActionButton size="sm" variant="ghost" confirm={`Remover "${title}"?`} action={() => deleteEvent(id)}>
+    <ActionButton
+      size="sm"
+      variant="ghost"
+      confirm={`Remover "${title}"?`}
+      action={() => deleteEvent(id)}
+    >
       Remover
     </ActionButton>
   );
