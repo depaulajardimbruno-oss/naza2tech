@@ -224,6 +224,74 @@ export type Database = {
           },
         ]
       }
+      profile_details: {
+        Row: {
+          address_city: string | null
+          address_complement: string | null
+          address_district: string | null
+          address_number: string | null
+          address_state: string | null
+          address_street: string | null
+          address_zip: string | null
+          baptism_date: string | null
+          baptized: boolean | null
+          birth_date: string | null
+          emergency_name: string | null
+          emergency_phone: string | null
+          gender: string | null
+          marital_status: string | null
+          member_since: string | null
+          profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          address_city?: string | null
+          address_complement?: string | null
+          address_district?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          baptism_date?: string | null
+          baptized?: boolean | null
+          birth_date?: string | null
+          emergency_name?: string | null
+          emergency_phone?: string | null
+          gender?: string | null
+          marital_status?: string | null
+          member_since?: string | null
+          profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          address_city?: string | null
+          address_complement?: string | null
+          address_district?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          baptism_date?: string | null
+          baptized?: boolean | null
+          birth_date?: string | null
+          emergency_name?: string | null
+          emergency_phone?: string | null
+          gender?: string | null
+          marital_status?: string | null
+          member_since?: string | null
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_details_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           active: boolean
@@ -232,6 +300,7 @@ export type Database = {
           email: string | null
           full_name: string
           id: string
+          nickname: string | null
           phone: string | null
           role_global: Database["public"]["Enums"]["global_role"]
           updated_at: string
@@ -243,6 +312,7 @@ export type Database = {
           email?: string | null
           full_name?: string
           id: string
+          nickname?: string | null
           phone?: string | null
           role_global?: Database["public"]["Enums"]["global_role"]
           updated_at?: string
@@ -254,6 +324,7 @@ export type Database = {
           email?: string | null
           full_name?: string
           id?: string
+          nickname?: string | null
           phone?: string | null
           role_global?: Database["public"]["Enums"]["global_role"]
           updated_at?: string

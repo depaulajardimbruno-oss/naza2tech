@@ -52,6 +52,12 @@ supabase/
 ## Cultos fixos
 Tabela `event_templates` (dia da semana + horário). A função `materialize_fixed_events()` cria os eventos reais das próximas 8 semanas e roda todo dia 03:00 (pg_cron). Datas já geradas ficam em `event_template_runs`, então um culto apagado de propósito não volta. Migration: `20261117000000_eventos_fixos.sql`.
 
+## Ficha do usuário e cadastro completo
+- `/admin/usuarios` → clique no nome → `/admin/usuarios/[id]`: cadastro completo, **e-mail de login**, **redefinir senha** (senha provisória mostrada uma vez), ADM/ativo e ministérios.
+- A própria pessoa completa o cadastro em **Conta** (mesmo formulário: `components/people/person-form.tsx`, regras em `lib/people/schema.ts`, actions em `lib/actions/people.ts`). Só o nome é obrigatório; CEP preenche o endereço pela ViaCEP.
+- Privacidade: `profiles` (nome, apelido, e-mail, WhatsApp) é visível a líderes; `profile_details` (nascimento, endereço, estado civil, batismo, emergência) só à própria pessoa e ao ADM.
+- Segurança: usuário comum não altera o próprio `active`, `email` nem `role_global` (trigger `guard_profile_role`). Migration `20261117000400_cadastro_completo.sql`.
+
 ## Líder e vice-líder
 - **Líder** (`is_leader`): só o ADM define.
 - **Líder** pode haver mais de um por ministério. Só líder titular (ou ADM) **coloca, remove e cadastra pessoas** na equipe.

@@ -1,4 +1,6 @@
-/** Usuários: criar conta (inclusive líder e ADM), promover a ADM, ativar/desativar. */
+/** Usuários: lista, criar conta (inclusive líder e ADM), promover a ADM, ativar/desativar.
+ *  Clicar no nome abre a ficha completa (/admin/usuarios/[id]). */
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/session";
 import { setUserAdmin, setUserActive } from "@/lib/actions/users";
@@ -23,7 +25,7 @@ export default async function UsuariosPage() {
     <>
       <PageHeader
         title="Usuários"
-        description="Quem se cadastrou e quem você criou. Vincule a ministérios aqui ou na página de cada ministério."
+        description="Clique no nome para abrir a ficha completa: dados, e-mail, senha e ministérios."
       >
         <NewUserDialog ministries={ministries ?? []} canSetRoles enabled={canCreate} />
       </PageHeader>
@@ -46,7 +48,10 @@ export default async function UsuariosPage() {
           {(users ?? []).map((u) => (
             <TableRow key={u.id}>
               <TableCell className="font-medium">
-                {u.full_name || "(sem nome)"} {u.id === s.userId && <Badge variant="outline">você</Badge>}
+                <Link href={`/admin/usuarios/${u.id}`} className="hover:text-blue2 hover:underline">
+                  {u.full_name || "(sem nome)"}
+                </Link>{" "}
+                {u.id === s.userId && <Badge variant="outline">você</Badge>}
               </TableCell>
               <TableCell className="text-muted-foreground">
                 {u.email}

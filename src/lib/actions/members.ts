@@ -11,7 +11,8 @@ import { requireAdmin, requireLeaderOf } from "@/lib/auth/session";
 import { friendlyError, type ActionState } from "./types";
 
 function paths(ministryId: string) {
-  return [`/admin/ministerios/${ministryId}`, `/lider/${ministryId}/membros`, `/ministerios/${ministryId}`];
+  // inclui a lista e as fichas de usuário (mostram os ministérios de cada pessoa)
+  return [`/admin/ministerios/${ministryId}`, `/lider/${ministryId}/membros`, `/ministerios/${ministryId}`, "/admin/usuarios"];
 }
 
 /** Garante que quem chama é ADM ou LÍDER TITULAR (vice não coloca/remove pessoas). */
@@ -36,6 +37,7 @@ export async function addMember(_p: ActionState, fd: FormData): Promise<ActionSt
     return { error: friendlyError(error.message) };
   }
   paths(ministry_id).forEach((p) => revalidatePath(p));
+  revalidatePath("/admin/usuarios", "layout");
   return { ok: "Membro adicionado." };
 }
 
