@@ -49,6 +49,9 @@ supabase/
 - **Escala** é opcional por ministério (`ministries.scales_enabled`, switch em `/admin/ministerios/[id]`). Desligada: some a aba Escalas/Pendências do líder e o RLS barra novas escalas; o ministério segue usando a agenda.
 - Migration: `supabase/migrations/20261116000200_agenda_aberta_e_escala_opcional.sql`.
 
+## Cultos fixos
+Tabela `event_templates` (dia da semana + horário). A função `materialize_fixed_events()` cria os eventos reais das próximas 8 semanas e roda todo dia 03:00 (pg_cron). Datas já geradas ficam em `event_template_runs`, então um culto apagado de propósito não volta. Migration: `20261117000000_eventos_fixos.sql`.
+
 ## Identidade visual
 Paleta e fontes vêm do site institucional (https://naza2-campinas.leo-ehrhardt82.workers.dev/): tema escuro, azul `#2f7bff` / `#5fb0ff`, títulos em **Unbounded**, texto em **Manrope**, botões em pílula. Os tokens estão em `src/app/globals.css` (prefixo `--naza-*`) e são mapeados para as variáveis do shadcn, então trocar a cor da marca é mexer em um lugar só. Para usar o logo oficial, coloque `public/logo.jpg` e ajuste `src/components/layout/brand.tsx`.
 
