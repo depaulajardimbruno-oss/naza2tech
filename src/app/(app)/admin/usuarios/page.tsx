@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ActionSwitch } from "@/components/forms/action-switch";
 import { Badge } from "@/components/ui/badge";
-import { adminClientConfigured } from "@/lib/supabase/admin";
+import { adminClientConfigured, adminKeyStatus } from "@/lib/supabase/admin";
 import { NewUserDialog } from "./new-user-dialog";
 
 export default async function UsuariosPage() {
@@ -29,7 +29,7 @@ export default async function UsuariosPage() {
       </PageHeader>
       {!canCreate && (
         <p className="mb-4 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm">
-          Para criar usuários pelo painel, falta a variável <code>SUPABASE_SERVICE_ROLE_KEY</code> na Vercel.
+          Para criar usuários pelo painel, falta a variável <code>SUPABASE_SERVICE_ROLE_KEY</code> na Vercel. Situação: {adminKeyStatus()}.
         </p>
       )}
       <Table>

@@ -21,3 +21,17 @@ export function createAdminClient() {
 }
 
 export const adminClientConfigured = () => !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+/**
+ * Diagnóstico seguro (nunca devolve a chave): "ausente", "vazia" ou o tipo detectado.
+ * Ajuda a saber se o problema é a variável não existir no deploy ou ter sido salva em branco.
+ */
+export function adminKeyStatus() {
+  const k = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (k === undefined) return "ausente neste deploy";
+  if (!k.trim()) return "salva em branco";
+  if (k.startsWith("sb_publishable_")) return "é a chave PÚBLICA (publishable), não a secreta";
+  if (k.startsWith("sb_secret_")) return "ok (secret key)";
+  if (k.startsWith("eyJ")) return "ok (service_role JWT)";
+  return "formato não reconhecido";
+}
