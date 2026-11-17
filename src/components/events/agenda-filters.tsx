@@ -11,7 +11,12 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/select";
 
-const PERIODS = { proximos: "Próximos", semana: "Próximos 7 dias", mes: "Próximos 30 dias", passados: "Já aconteceram" };
+const PERIODS = {
+  proximos: "Próximos",
+  semana: "Próximos 7 dias",
+  mes: "Próximos 30 dias",
+  passados: "Já aconteceram",
+};
 
 export function AgendaFilters({
   ministries,
@@ -35,30 +40,47 @@ export function AgendaFilters({
   const pill = (active: boolean) =>
     cn(
       "rounded-full border px-3 py-1.5 text-sm transition-colors",
-      active ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+      active
+        ? "border-primary bg-primary text-primary-foreground"
+        : "text-muted-foreground hover:text-foreground",
     );
 
   return (
-    <div className={cn("mb-4 flex flex-wrap items-center gap-2", pending && "opacity-70")}>
-      <button type="button" className={pill(ministerio === "")} onClick={() => set("ministerio", "")}>
+    <div
+      className={cn(
+        "mb-4 flex flex-wrap items-center gap-2",
+        pending && "opacity-70",
+      )}
+    >
+      <button
+        type="button"
+        className={pill(ministerio === "")}
+        onClick={() => set("ministerio", "")}
+      >
         Todos
       </button>
-      <button type="button" className={pill(ministerio === "geral")} onClick={() => set("ministerio", "geral")}>
+      <button
+        type="button"
+        className={pill(ministerio === "geral")}
+        onClick={() => set("ministerio", "geral")}
+      >
         Igreja
       </button>
-      <NativeSelect
-        aria-label="Ministério"
-        className="w-auto min-w-44"
-        value={ministerio !== "" && ministerio !== "geral" ? ministerio : ""}
-        onChange={(e) => set("ministerio", e.target.value)}
-      >
-        <option value="">Ministério…</option>
-        {ministries.map((m) => (
-          <option key={m.id} value={m.id}>
-            {m.name}
-          </option>
-        ))}
-      </NativeSelect>
+      {ministries.length > 0 && (
+        <NativeSelect
+          aria-label="Ministério"
+          className="w-auto min-w-44"
+          value={ministerio !== "" && ministerio !== "geral" ? ministerio : ""}
+          onChange={(e) => set("ministerio", e.target.value)}
+        >
+          <option value="">Ministério…</option>
+          {ministries.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.name}
+            </option>
+          ))}
+        </NativeSelect>
+      )}
       {lista && (
         <NativeSelect
           aria-label="Período"
@@ -79,8 +101,13 @@ export function AgendaFilters({
         placeholder="Buscar..."
         className="w-40"
         defaultValue={params.q ?? ""}
-        onKeyDown={(e) => e.key === "Enter" && set("q", e.currentTarget.value.trim())}
-        onBlur={(e) => e.currentTarget.value.trim() !== (params.q ?? "") && set("q", e.currentTarget.value.trim())}
+        onKeyDown={(e) =>
+          e.key === "Enter" && set("q", e.currentTarget.value.trim())
+        }
+        onBlur={(e) =>
+          e.currentTarget.value.trim() !== (params.q ?? "") &&
+          set("q", e.currentTarget.value.trim())
+        }
       />
     </div>
   );

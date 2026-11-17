@@ -7,6 +7,7 @@
  *
  * Filtros (valem nas duas visões; ficam na URL, então o link é compartilhável):
  *   ?ministerio=<uuid> | geral   (vazio = todos)      ?q=texto (busca no título)
+ *   O seletor de ministério lista só os do usuário (ADM: todos).
  *
  * Quem cria eventos: ADM (qualquer) e líder (do seu ministério) — ver /admin/eventos
  * e /lider/[id]/eventos. Aqui é só leitura (e remover, se tiver permissão).
@@ -73,12 +74,18 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
   else if (ministerio) query = query.eq("ministry_id", ministerio);
   if (q) query = query.ilike("title", `%${q.replace(/[%,]/g, " ")}%`);
 
-  const [{ data }, { data: ministries }, session] = await Promise.all([
+  const [{ data }, { data: allMinistries }, session] = await Promise.all([
     query,
     supabase.from("ministries").select("id, name").eq("is_active", true).order("name"),
     getSession(),
   ]);
   const events = (data ?? []) as EventRow[];
+
+  // Seletor de ministério: ADM vê todos; os demais veem só os ministérios de que participam.
+  // (Os EVENTOS continuam visíveis a todos em "Todos" — só a lista do filtro é restrita.)
+  // Se o link já traz um ministério fora dessa lista, ele é incluído para o seletor não ficar em branco.
+  const mine = new Set(session?.memberships.map((m) => m.ministry_id));
+  const ministries = (allMinistries ?? []).filter((m) => session?.isAdmin || mine.has(m.id) || m.id === ministerio);
 
   const canDelete = (e: EventRow) =>
     !!session && (session.isAdmin || (e.ministry_id !== null && session.leaderOf.includes(e.ministry_id)));
@@ -105,7 +112,7 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
         </div>
       </PageHeader>
 
-      <AgendaFilters ministries={ministries ?? []} params={current} />
+      <AgendaFilters ministries={ministries} params={current} />
 
       {vista === "mes" ? (
         <>
