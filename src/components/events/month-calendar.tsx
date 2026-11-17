@@ -1,7 +1,7 @@
 /**
  * Calendário mensal em grade (domingo a sábado). Server component, só desenha.
  * - Cada dia é um link que seleciona o dia (?dia=YYYY-MM-DD); o detalhe aparece abaixo.
- * - Desktop: até 2 eventos por dia (hora + título) e "+N".  Celular: só bolinhas coloridas.
+ * - Desktop: até 2 eventos por dia (título; hora só em telas largas) e "+N".  Celular: só bolinhas coloridas.
  * - Cor = ministério (ver lib/ministry-color.ts); azul = evento geral da igreja.
  */
 import Link from "next/link";
@@ -66,10 +66,12 @@ export function MonthCalendar({
                 {events.slice(0, MAX_CHIPS).map((e) => (
                   <div
                     key={e.id}
-                    className="truncate rounded px-1.5 py-0.5 text-[11px] leading-tight"
+                    title={`${hhmm(e.start_time)} · ${e.title}`}
+                    className="line-clamp-2 rounded px-1.5 py-0.5 text-[11px] leading-tight"
                     style={{ background: `${ministryColor(e.ministry_id)}26`, borderLeft: `2px solid ${ministryColor(e.ministry_id)}` }}
                   >
-                    <span className="text-muted-foreground">{hhmm(e.start_time)}</span> {e.title}
+                    <span className="hidden text-muted-foreground xl:inline">{hhmm(e.start_time)} </span>
+                    {e.title}
                   </div>
                 ))}
                 {events.length > MAX_CHIPS && (
