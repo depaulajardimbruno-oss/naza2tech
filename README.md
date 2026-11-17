@@ -52,6 +52,14 @@ supabase/
 ## Cultos fixos
 Tabela `event_templates` (dia da semana + horário). A função `materialize_fixed_events()` cria os eventos reais das próximas 8 semanas e roda todo dia 03:00 (pg_cron). Datas já geradas ficam em `event_template_runs`, então um culto apagado de propósito não volta. Migration: `20261117000000_eventos_fixos.sql`.
 
+## Escalas (Fase 2)
+Fluxo: **líder/vice escala** (rascunho) → **publica** → **voluntário confirma ou recusa com motivo** (pode pedir troca).
+- Líder: `/lider/[id]/escalas` (próximos eventos da igreja + do ministério; "+ Escalar" sugere o cargo padrão; aviso de conflito com outro ministério via `check_schedule_conflicts`, não bloqueia) e `/lider/[id]/pendencias` (não vão → aguardando → rascunhos).
+- Voluntário: `/minha-agenda` ("Minhas escalas": confirmar/"Não posso", vê com quem vai servir; `?ver=anteriores`).
+- Início: minhas próximas escalas + pendências por ministério (ADM vê todos).
+- Status: Rascunho (cinza) · Aguardando (amarelo) · Confirmado (verde) · Não vai (vermelho) — `components/schedules/status-badge.tsx`.
+- Código: `lib/actions/schedules.ts`, `lib/schedules/pending.ts`, `components/schedules/*`.
+
 ## Ficha do usuário e cadastro completo
 - `/admin/usuarios` → clique no nome → `/admin/usuarios/[id]`: cadastro completo, **e-mail de login**, **redefinir senha** (senha provisória mostrada uma vez), ADM/ativo e ministérios.
 - A própria pessoa completa o cadastro em **Conta** (mesmo formulário: `components/people/person-form.tsx`, regras em `lib/people/schema.ts`, actions em `lib/actions/people.ts`). Só o nome é obrigatório; CEP preenche o endereço pela ViaCEP.
