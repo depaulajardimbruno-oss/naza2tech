@@ -108,9 +108,9 @@ export default async function DashboardPage() {
                         <span className="font-medium">{m.name}</span>
                         <span className="flex flex-wrap justify-end gap-1">
                           {ok && <span className="text-xs text-muted-foreground">em dia</span>}
-                          {c.recusados > 0 && <Badge variant="destructive">{c.recusados} não vão</Badge>}
+                          {c.recusados > 0 && <Badge variant="destructive">{c.recusados} {c.recusados === 1 ? "não vai" : "não vão"}</Badge>}
                           {c.aguardando > 0 && <Badge variant="warning">{c.aguardando} aguardando</Badge>}
-                          {c.rascunhos > 0 && <Badge variant="outline">{c.rascunhos} rascunho</Badge>}
+                          {c.rascunhos > 0 && <Badge variant="outline">{c.rascunhos} {c.rascunhos === 1 ? "rascunho" : "rascunhos"}</Badge>}
                         </span>
                       </Link>
                     </li>

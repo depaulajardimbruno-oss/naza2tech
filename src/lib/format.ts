@@ -3,11 +3,12 @@
 /** "20:30:00" -> "20:30" */
 export const hhmm = (t: string) => t.slice(0, 5);
 
-/** "2026-11-22" -> "domingo, 22 de novembro" (meio-dia evita virar o dia por fuso) */
+/** "2026-11-22" -> "Domingo, 22 de novembro" (meio-dia evita virar o dia por fuso) */
 export function formatDay(date: string) {
-  return new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(
+  const s = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(
     new Date(`${date}T12:00:00`)
   );
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 /** Data de hoje no fuso de Brasília, "YYYY-MM-DD". */
