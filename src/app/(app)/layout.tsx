@@ -36,6 +36,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     nav.push(
       { href: "/admin/ministerios", label: "Ministérios", icon: "church", group: "Administração" },
       { href: "/admin/usuarios", label: "Usuários", icon: "users", group: "Administração" },
+      { href: "/admin/escalas", label: "Escalas", icon: "shield", group: "Administração" },
       { href: "/admin/eventos", label: "Eventos", icon: "calendar", group: "Administração" }
     );
   }
