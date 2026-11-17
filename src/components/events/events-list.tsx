@@ -17,7 +17,7 @@ export function EventsList({ events, canDelete }: { events: EventRow[]; canDelet
     <div className="space-y-6">
       {[...days.entries()].map(([date, items]) => (
         <section key={date}>
-          <h2 className="mb-2 text-sm font-semibold capitalize text-muted-foreground">{formatDay(date)}</h2>
+          <h2 className="mb-2 text-sm font-semibold text-muted-foreground first-letter:uppercase">{formatDay(date)}</h2>
           <ul className="divide-y rounded-xl border bg-card">
             {items.map((e) => (
               <li key={e.id} className="flex items-start justify-between gap-3 p-3">
