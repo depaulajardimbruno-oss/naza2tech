@@ -3,7 +3,7 @@
  *
  * 1. Exige sessão (redireciona para /login se não houver).
  * 2. Monta o menu conforme o perfil:
- *    - todos:   Início, Minha agenda, Conta
+ *    - todos:   Início, Agenda (toda a igreja), Minhas escalas, Conta
  *    - líder:   um item por ministério que lidera
  *    - admin:   seção Administração
  * 3. Entrega tudo ao AppShell (client) que só desenha.
@@ -18,7 +18,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
 
   const nav: NavItem[] = [
     { href: "/dashboard", label: "Início", icon: "dashboard" },
-    { href: "/minha-agenda", label: "Agenda", icon: "calendar" },
+    { href: "/agenda", label: "Agenda", icon: "calendar" },
+    { href: "/minha-agenda", label: "Minhas escalas", icon: "user" },
   ];
 
   // Ministérios em que participa (visão de membro)

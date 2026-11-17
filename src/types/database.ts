@@ -32,6 +32,7 @@ export type Database = {
           end_time: string | null
           event_date: string
           id: string
+          ministry_id: string | null
           notes: string | null
           start_time: string
           title: string
@@ -43,6 +44,7 @@ export type Database = {
           end_time?: string | null
           event_date: string
           id?: string
+          ministry_id?: string | null
           notes?: string | null
           start_time: string
           title: string
@@ -54,6 +56,7 @@ export type Database = {
           end_time?: string | null
           event_date?: string
           id?: string
+          ministry_id?: string | null
           notes?: string | null
           start_time?: string
           title?: string
@@ -66,6 +69,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "events_ministry_id_fkey"
+            columns: ["ministry_id"]
+            isOneToOne: false
+            referencedRelation: "ministries"
+            referencedColumns: ["id"]
+          },
         ]
       }
       ministries: {
@@ -75,6 +85,7 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          scales_enabled: boolean
         }
         Insert: {
           created_at?: string
@@ -82,6 +93,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          scales_enabled?: boolean
         }
         Update: {
           created_at?: string
@@ -89,6 +101,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          scales_enabled?: boolean
         }
         Relationships: []
       }

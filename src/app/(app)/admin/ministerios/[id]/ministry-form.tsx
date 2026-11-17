@@ -1,6 +1,6 @@
 "use client";
 import { useActionState } from "react";
-import { updateMinistry, toggleMinistryActive } from "@/lib/actions/ministries";
+import { updateMinistry, toggleMinistryActive, toggleMinistryScales } from "@/lib/actions/ministries";
 import type { ActionState } from "@/lib/actions/types";
 import type { Tables } from "@/types/database";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +27,15 @@ export function MinistryForm({ ministry }: { ministry: Tables<"ministries"> }) {
       <CardContent>
         <form action={action} className="space-y-4">
           <input type="hidden" name="id" value={ministry.id} />
+          <div className="flex items-center justify-between rounded-lg border p-3 text-sm">
+            <div>
+              <p className="font-medium">Usa escala</p>
+              <p className="text-muted-foreground">
+                Desligado, o ministério só publica eventos na agenda (sem escala de voluntários).
+              </p>
+            </div>
+            <ActionSwitch checked={ministry.scales_enabled} action={(v) => toggleMinistryScales(ministry.id, v)} />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="name">Nome</Label>
             <Input id="name" name="name" defaultValue={ministry.name} required />

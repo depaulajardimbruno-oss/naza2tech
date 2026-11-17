@@ -23,7 +23,8 @@ src/
 │  ├─ auth/callback/             troca o code dos links de e-mail por sessão
 │  └─ (app)/                     área logada; layout.tsx monta o menu por perfil
 │     ├─ dashboard/              resumo (Fase 2: próximas escalas / pendências)
-│     ├─ minha-agenda/           escalas do voluntário (Fase 2)
+│     ├─ agenda/                 agenda da igreja: TODOS veem TUDO, com filtros (ministério/período/busca)
+│     ├─ minha-agenda/           "Minhas escalas" do voluntário (Fase 2)
 │     ├─ ministerios/[id]/       visão de membro: equipe e escala
 │     ├─ lider/[ministryId]/     guard requireLeaderOf; abas membros | escalas | pendências
 │     ├─ admin/                  guard requireAdmin; ministérios (+cargos +equipe), usuários, eventos
@@ -42,6 +43,11 @@ supabase/
 ├─ migrations/                   schema, RLS, triggers, RPCs (aplicadas no projeto gxbowilntkmeveejeecg)
 └─ functions/send-reminders/     Edge Function de lembretes (Fase 3)
 ```
+
+## Agenda x Escala
+- **Agenda** (`/agenda`): todo usuário logado vê todos os eventos. Evento é da igreja (`ministry_id` nulo, só ADM cria) ou de um ministério (ADM ou líder dele cria).
+- **Escala** é opcional por ministério (`ministries.scales_enabled`, switch em `/admin/ministerios/[id]`). Desligada: some a aba Escalas/Pendências do líder e o RLS barra novas escalas; o ministério segue usando a agenda.
+- Migration: `supabase/migrations/20261116000200_agenda_aberta_e_escala_opcional.sql`.
 
 ## Identidade visual
 Paleta e fontes vêm do site institucional (https://naza2-campinas.leo-ehrhardt82.workers.dev/): tema escuro, azul `#2f7bff` / `#5fb0ff`, títulos em **Unbounded**, texto em **Manrope**, botões em pílula. Os tokens estão em `src/app/globals.css` (prefixo `--naza-*`) e são mapeados para as variáveis do shadcn, então trocar a cor da marca é mexer em um lugar só. Para usar o logo oficial, coloque `public/logo.jpg` e ajuste `src/components/layout/brand.tsx`.

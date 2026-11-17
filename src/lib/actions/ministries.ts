@@ -58,6 +58,20 @@ export async function toggleMinistryActive(id: string, active: boolean) {
   revalidatePath("/", "layout");
 }
 
+/**
+ * Liga/desliga o recurso "escala" do ministério.
+ * Desligado: o ministério continua na agenda (eventos), mas some a aba de
+ * escalas/pendências do líder e o RLS bloqueia a criação de novas escalas.
+ */
+export async function toggleMinistryScales(id: string, enabled: boolean) {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { error } = await supabase.from("ministries").update({ scales_enabled: enabled }).eq("id", id);
+  if (error) return { error: friendlyError(error.message) };
+  revalidatePath("/", "layout");
+  return { ok: enabled ? "Escala ativada." : "Escala desativada." };
+}
+
 // ---------- CARGOS ----------
 
 export async function createRole(_p: ActionState, fd: FormData): Promise<ActionState> {

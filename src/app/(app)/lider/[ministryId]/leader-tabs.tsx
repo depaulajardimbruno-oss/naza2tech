@@ -3,17 +3,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
+/** `scales: true` = aba só aparece quando o ministério usa escala. */
 const TABS = [
-  { href: "/membros", label: "Membros" },
-  { href: "/escalas", label: "Escalas" },
-  { href: "/pendencias", label: "Pendências" },
+  { href: "/membros", label: "Membros", scales: false },
+  { href: "/eventos", label: "Eventos", scales: false },
+  { href: "/escalas", label: "Escalas", scales: true },
+  { href: "/pendencias", label: "Pendências", scales: true },
 ];
 
-export function LeaderTabs({ base }: { base: string }) {
+export function LeaderTabs({ base, scalesEnabled }: { base: string; scalesEnabled: boolean }) {
   const pathname = usePathname();
   return (
     <div className="mb-6 flex gap-1 border-b">
-      {TABS.map((t) => {
+      {TABS.filter((t) => scalesEnabled || !t.scales).map((t) => {
         const href = base + t.href;
         const active = pathname.startsWith(href);
         return (
