@@ -52,7 +52,7 @@ export default async function MinistryDetailPage({ params }: PageProps<"/admin/m
           </CardHeader>
           <CardContent className="space-y-4">
             <AddMemberForm ministryId={id} people={available} roles={roles ?? []} />
-            <MembersTable ministryId={id} members={members ?? []} roles={roles ?? []} canSetLeader canSetVice />
+            <MembersTable ministryId={id} members={members ?? []} roles={roles ?? []} canSetLeader canSetVice canRemove />
           </CardContent>
         </Card>
       </div>

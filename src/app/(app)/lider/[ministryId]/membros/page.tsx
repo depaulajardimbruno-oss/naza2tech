@@ -1,7 +1,7 @@
 /**
  * Membros do ministério (visão do líder).
  * Igual à seção de equipe do ADM, mas o switch de líder fica travado (só ADM define líder).
- * O líder TITULAR nomeia vice-líder; o vice tem as mesmas permissões, mas não nomeia vice.
+ * O líder TITULAR coloca/remove pessoas e nomeia vice. O vice só troca cargos aqui.
  * "Novo voluntário" cria a conta de quem ainda não usa o app (ou vincula quem já tem conta).
  */
 import { createClient } from "@/lib/supabase/server";
@@ -56,6 +56,9 @@ export default async function LeaderMembersPage({
       .single(),
   ]);
 
+  // Colocar/remover pessoas e nomear vice: só ADM ou líder TITULAR. O vice só troca cargo.
+  const isMain = !!s && (s.isAdmin || s.mainLeaderOf.includes(ministryId));
+
   const memberIds = new Set((members ?? []).map((m) => m.profile?.id));
   const available = (profiles ?? []).filter((p) => !memberIds.has(p.id));
 
@@ -64,7 +67,7 @@ export default async function LeaderMembersPage({
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle>Equipe</CardTitle>
-          {ministry && (
+          {ministry && isMain && (
             <NewUserDialog
               label="Novo voluntário"
               ministries={[ministry]}
@@ -85,17 +88,25 @@ export default async function LeaderMembersPage({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <AddMemberForm
-          ministryId={ministryId}
-          people={available}
-          roles={roles ?? []}
-        />
+        {isMain ? (
+          <AddMemberForm
+            ministryId={ministryId}
+            people={available}
+            roles={roles ?? []}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Como vice-líder, você ajusta os cargos. Colocar ou remover pessoas é
+            com o líder.
+          </p>
+        )}
         <MembersTable
           ministryId={ministryId}
           members={members ?? []}
           roles={roles ?? []}
           canSetLeader={!!s?.isAdmin}
-          canSetVice={!!s && (s.isAdmin || s.mainLeaderOf.includes(ministryId))}
+          canSetVice={isMain}
+          canRemove={isMain}
         />
       </CardContent>
     </Card>

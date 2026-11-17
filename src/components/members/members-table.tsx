@@ -1,6 +1,6 @@
 /**
  * Tabela de membros do ministério: trocar cargo, marcar líder (só ADM),
- * marcar vice-líder (ADM ou líder titular), remover.
+ * marcar vice-líder (ADM ou líder titular), remover (ADM ou líder titular).
  * Server Component: os controles interativos são client components pequenos.
  */
 import { Trash2Icon } from "lucide-react";
@@ -41,12 +41,15 @@ export function MembersTable({
   roles,
   canSetLeader,
   canSetVice,
+  canRemove,
 }: {
   ministryId: string;
   members: Member[];
   roles: { id: string; name: string }[];
   canSetLeader: boolean;
   canSetVice: boolean;
+  /** Remover da equipe: só ADM ou líder titular. */
+  canRemove: boolean;
 }) {
   if (!members.length)
     return (
@@ -107,18 +110,20 @@ export function MembersTable({
               />
             </TableCell>
             <TableCell>
-              <ActionButton
-                variant="ghost"
-                size="icon"
-                aria-label="Remover do ministério"
-                confirm={`Remover ${m.profile?.full_name} do ministério?`}
-                action={async () => {
-                  "use server";
-                  return removeMember(m.id, ministryId);
-                }}
-              >
-                <Trash2Icon className="text-muted-foreground" />
-              </ActionButton>
+              {canRemove && (
+                <ActionButton
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Remover do ministério"
+                  confirm={`Remover ${m.profile?.full_name} do ministério?`}
+                  action={async () => {
+                    "use server";
+                    return removeMember(m.id, ministryId);
+                  }}
+                >
+                  <Trash2Icon className="text-muted-foreground" />
+                </ActionButton>
+              )}
             </TableCell>
           </TableRow>
         ))}

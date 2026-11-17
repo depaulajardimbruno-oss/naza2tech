@@ -37,7 +37,7 @@ export async function setUserActive(profileId: string, active: boolean): Promise
  * Quem pode o quê (a regra é aplicada AQUI, porque o cliente admin ignora o RLS):
  *   ADM          -> qualquer ministério; pode marcar líder, vice-líder e criar outro ADM.
  *   Líder titular -> só nos ministérios que lidera; pode marcar vice-líder.
- *   Vice-líder   -> só nos ministérios em que é vice; sempre como voluntário.
+ *   Vice-líder   -> NÃO cadastra nem coloca pessoas (decisão do cliente).
  *
  * Se o e-mail já tem conta, NÃO cria outra: só vincula aos ministérios marcados
  * (e aplica líder/ADM se quem pediu for ADM). Assim o líder consegue "trazer" alguém
@@ -67,7 +67,7 @@ function tempPassword() {
 
 export async function createUser(_p: CreateUserState, fd: FormData): Promise<CreateUserState> {
   const session = await requireSession();
-  if (!session.isAdmin && session.leaderOf.length === 0) return { error: "Apenas ADM ou líder pode cadastrar pessoas." };
+  if (!session.isAdmin && session.mainLeaderOf.length === 0) return { error: "Apenas ADM ou líder pode cadastrar pessoas." };
 
   const admin = createAdminClient();
   if (!admin) return { error: "Falta configurar SUPABASE_SERVICE_ROLE_KEY na Vercel." };
@@ -89,7 +89,7 @@ export async function createUser(_p: CreateUserState, fd: FormData): Promise<Cre
     if (d.is_admin || d.leader_of.length) return { error: "Só o ADM pode criar líderes ou administradores." };
     if (d.vice_of.some((m) => !session.mainLeaderOf.includes(m)))
       return { error: "Só o líder do ministério pode nomear vice-líder." };
-    const outside = [...d.ministries, ...d.vice_of].filter((m) => !session.leaderOf.includes(m));
+    const outside = [...d.ministries, ...d.vice_of].filter((m) => !session.mainLeaderOf.includes(m));
     if (outside.length) return { error: "Você só pode cadastrar pessoas nos ministérios que lidera." };
     if (!d.ministries.length && !d.vice_of.length) return { error: "Marque o ministério da pessoa." };
   }
