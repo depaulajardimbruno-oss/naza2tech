@@ -36,17 +36,18 @@ export default async function DashboardPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {s.memberships.map((m) => (
-            <Link key={m.id} href={m.is_leader ? `/lider/${m.ministry_id}` : `/ministerios/${m.ministry_id}`}>
+            <Link key={m.id} href={(m.is_leader || m.is_vice_leader) ? `/lider/${m.ministry_id}` : `/ministerios/${m.ministry_id}`}>
               <Card className="h-full hover:bg-accent/40">
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     {m.ministry.name}
                     {m.is_leader && <Badge>Líder</Badge>}
+                    {m.is_vice_leader && <Badge variant="secondary">Vice-líder</Badge>}
                   </CardTitle>
                   <CardDescription>{m.role?.name ?? "Sem cargo definido"}</CardDescription>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground">
-                  {m.is_leader ? "Gerenciar membros e escalas" : "Ver escala do ministério"}
+                  {m.is_leader || m.is_vice_leader ? "Gerenciar membros e escalas" : "Ver escala do ministério"}
                 </CardContent>
               </Card>
             </Link>

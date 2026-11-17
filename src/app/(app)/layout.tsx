@@ -27,8 +27,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     nav.push({ href: `/ministerios/${m.ministry_id}`, label: m.ministry.name, icon: "church", group: "Ministérios" });
   }
 
-  // Ministérios que lidera
-  for (const m of session.memberships.filter((x) => x.is_leader)) {
+  // Ministérios que lidera (líder ou vice)
+  for (const m of session.memberships.filter((x) => x.is_leader || x.is_vice_leader)) {
     nav.push({ href: `/lider/${m.ministry_id}`, label: m.ministry.name, icon: "users", group: "Liderança" });
   }
 

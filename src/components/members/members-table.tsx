@@ -1,10 +1,23 @@
 /**
- * Tabela de membros do ministério: trocar cargo, marcar líder (só ADM), remover.
+ * Tabela de membros do ministério: trocar cargo, marcar líder (só ADM),
+ * marcar vice-líder (ADM ou líder titular), remover.
  * Server Component: os controles interativos são client components pequenos.
  */
 import { Trash2Icon } from "lucide-react";
-import { setMemberRole, setMemberLeader, removeMember } from "@/lib/actions/members";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  setMemberRole,
+  setMemberLeader,
+  setMemberVice,
+  removeMember,
+} from "@/lib/actions/members";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { ActionSelect } from "@/components/forms/action-select";
 import { ActionSwitch } from "@/components/forms/action-switch";
 import { ActionButton } from "@/components/forms/action-button";
@@ -12,8 +25,14 @@ import { ActionButton } from "@/components/forms/action-button";
 type Member = {
   id: string;
   is_leader: boolean;
+  is_vice_leader: boolean;
   ministry_role_id: string | null;
-  profile: { id: string; full_name: string; email: string | null; phone: string | null } | null;
+  profile: {
+    id: string;
+    full_name: string;
+    email: string | null;
+    phone: string | null;
+  } | null;
 };
 
 export function MembersTable({
@@ -21,13 +40,18 @@ export function MembersTable({
   members,
   roles,
   canSetLeader,
+  canSetVice,
 }: {
   ministryId: string;
   members: Member[];
   roles: { id: string; name: string }[];
   canSetLeader: boolean;
+  canSetVice: boolean;
 }) {
-  if (!members.length) return <p className="text-sm text-muted-foreground">Nenhum membro ainda.</p>;
+  if (!members.length)
+    return (
+      <p className="text-sm text-muted-foreground">Nenhum membro ainda.</p>
+    );
 
   return (
     <Table>
@@ -36,6 +60,7 @@ export function MembersTable({
           <TableHead>Nome</TableHead>
           <TableHead>Cargo</TableHead>
           <TableHead>Líder</TableHead>
+          <TableHead>Vice</TableHead>
           <TableHead className="w-10" />
         </TableRow>
       </TableHeader>
@@ -44,7 +69,9 @@ export function MembersTable({
           <TableRow key={m.id}>
             <TableCell>
               <p className="font-medium">{m.profile?.full_name}</p>
-              <p className="text-xs text-muted-foreground">{m.profile?.phone ?? m.profile?.email}</p>
+              <p className="text-xs text-muted-foreground">
+                {m.profile?.phone ?? m.profile?.email}
+              </p>
             </TableCell>
             <TableCell>
               <ActionSelect
@@ -65,6 +92,17 @@ export function MembersTable({
                 action={async (v) => {
                   "use server";
                   return setMemberLeader(m.id, ministryId, v);
+                }}
+              />
+            </TableCell>
+            <TableCell>
+              <ActionSwitch
+                checked={m.is_vice_leader}
+                disabled={!canSetVice || m.is_leader}
+                label="Vice-líder"
+                action={async (v) => {
+                  "use server";
+                  return setMemberVice(m.id, ministryId, v);
                 }}
               />
             </TableCell>

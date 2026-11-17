@@ -110,6 +110,7 @@ export type Database = {
           created_at: string
           id: string
           is_leader: boolean
+          is_vice_leader: boolean
           ministry_id: string
           ministry_role_id: string | null
           profile_id: string
@@ -118,6 +119,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_leader?: boolean
+          is_vice_leader?: boolean
           ministry_id: string
           ministry_role_id?: string | null
           profile_id: string
@@ -126,6 +128,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_leader?: boolean
+          is_vice_leader?: boolean
           ministry_id?: string
           ministry_role_id?: string | null
           profile_id?: string
@@ -346,6 +349,7 @@ export type Database = {
       is_any_leader: { Args: never; Returns: boolean }
       is_any_member: { Args: never; Returns: boolean }
       is_leader_of: { Args: { p_ministry: string }; Returns: boolean }
+      is_main_leader_of: { Args: { p_ministry: string }; Returns: boolean }
       is_member_of: { Args: { p_ministry: string }; Returns: boolean }
       reminders_due: {
         Args: { p_now?: string }

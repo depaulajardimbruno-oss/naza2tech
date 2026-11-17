@@ -16,7 +16,7 @@ export default async function MinisterioPage({ params }: PageProps<"/ministerios
 
   const { data: members } = await supabase
     .from("ministry_members")
-    .select("id, is_leader, profile:profiles(full_name), role:ministry_roles(name)")
+    .select("id, is_leader, is_vice_leader, profile:profiles(full_name), role:ministry_roles(name)")
     .eq("ministry_id", id)
     .order("is_leader", { ascending: false });
 
@@ -36,6 +36,7 @@ export default async function MinisterioPage({ params }: PageProps<"/ministerios
             <TableRow key={m.id}>
               <TableCell>
                 {m.profile?.full_name} {m.is_leader && <Badge className="ml-2">Líder</Badge>}
+                {m.is_vice_leader && <Badge variant="secondary" className="ml-2">Vice-líder</Badge>}
               </TableCell>
               <TableCell>{m.role?.name ?? "—"}</TableCell>
             </TableRow>

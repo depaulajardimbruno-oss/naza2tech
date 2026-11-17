@@ -52,9 +52,14 @@ supabase/
 ## Cultos fixos
 Tabela `event_templates` (dia da semana + horário). A função `materialize_fixed_events()` cria os eventos reais das próximas 8 semanas e roda todo dia 03:00 (pg_cron). Datas já geradas ficam em `event_template_runs`, então um culto apagado de propósito não volta. Migration: `20261117000000_eventos_fixos.sql`.
 
+## Líder e vice-líder
+- **Líder** (`is_leader`): só o ADM define.
+- **Vice-líder** (`is_vice_leader`): o líder titular (ou o ADM) nomeia, na aba Membros ou no cadastro. O vice tem as mesmas permissões do líder no ministério (membros, eventos, escalas), mas não nomeia nem remove vice.
+- No banco: `is_leader_of()` = líder OU vice; `is_main_leader_of()` = só titular; trigger `guard_leader_flag` aplica as regras. Migration `20261117000200_vice_lider.sql`.
+
 ## Cadastrar usuários pelo painel
 - **ADM** (`/admin/usuarios` → Novo usuário): qualquer ministério, pode marcar **Líder** por ministério e **Administrador geral**.
-- **Líder** (`/lider/[id]/membros` → Novo voluntário): só no(s) ministério(s) que lidera, sempre como voluntário.
+- **Líder** (`/lider/[id]/membros` → Novo voluntário): só no(s) ministério(s) que lidera; o titular pode marcar **Vice**. O vice cadastra só voluntários.
 - E-mail que já tem conta: não cria outra, só vincula aos ministérios marcados.
 - Conta nova: já confirmada, com senha provisória mostrada uma vez (mensagem pronta para WhatsApp); a pessoa troca em Conta.
 - Código: `src/lib/actions/users.ts` (`createUser`, regras de permissão), `src/components/users/new-user-dialog.tsx`, `src/lib/supabase/admin.ts` (service role, só servidor; exige `SUPABASE_SERVICE_ROLE_KEY` na Vercel).

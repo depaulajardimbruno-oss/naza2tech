@@ -54,8 +54,30 @@ export async function setMemberLeader(memberId: string, ministryId: string, isLe
   await requireAdmin();
   const supabase = await createClient();
   const { error } = await supabase.from("ministry_members").update({ is_leader: isLeader }).eq("id", memberId);
-  if (error) return { error: friendlyError(error.message) };
+  if (error) {
+    if (error.message.includes("leader_or_vice")) return { error: "Tire a vice-liderança antes de tornar líder." };
+    return { error: friendlyError(error.message) };
+  }
   paths(ministryId).forEach((p) => revalidatePath(p));
   revalidatePath("/", "layout");
   return { ok: isLeader ? "Definido como líder." : "Liderança removida." };
+}
+
+/**
+ * Nomeia/remove VICE-LÍDER. Pode: ADM ou o líder TITULAR do ministério.
+ * O trigger guard_leader_flag repete essa regra no banco.
+ */
+export async function setMemberVice(memberId: string, ministryId: string, isVice: boolean): Promise<ActionState> {
+  const s = await requireLeaderOf(ministryId);
+  if (!s.isAdmin && !s.mainLeaderOf.includes(ministryId))
+    return { error: "Só o líder do ministério pode nomear vice-líder." };
+  const supabase = await createClient();
+  const { error } = await supabase.from("ministry_members").update({ is_vice_leader: isVice }).eq("id", memberId);
+  if (error) {
+    if (error.message.includes("leader_or_vice")) return { error: "O líder não pode ser vice ao mesmo tempo." };
+    return { error: friendlyError(error.message) };
+  }
+  paths(ministryId).forEach((p) => revalidatePath(p));
+  revalidatePath("/", "layout");
+  return { ok: isVice ? "Definido como vice-líder." : "Vice-liderança removida." };
 }

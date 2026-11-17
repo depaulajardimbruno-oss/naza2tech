@@ -3,6 +3,7 @@
  * Diálogo "Novo usuário" — usado pelo ADM (/admin/usuarios) e pelo líder (/lider/[id]/membros).
  *
  * `canSetRoles` (só ADM): mostra "Administrador geral" e a coluna "Líder" por ministério.
+ * `canSetVice` (ADM ou líder titular): mostra a coluna "Vice" por ministério.
  * `ministries`: ministérios que quem está cadastrando pode usar (ADM: todos; líder: os dele).
  * `preselected`: ministério já marcado (ex.: a página do ministério do líder).
  *
@@ -26,12 +27,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { FormMessage } from "@/components/forms/form-message";
+import { cn } from "@/lib/utils";
 
 const APP_URL = "https://naza2tech.vercel.app";
 
 type Props = {
   ministries: { id: string; name: string }[];
   canSetRoles: boolean;
+  canSetVice?: boolean;
   enabled: boolean;
   preselected?: string;
   label?: string;
@@ -78,6 +81,7 @@ export function NewUserDialog({
 function NewUserForm({
   ministries,
   canSetRoles,
+  canSetVice = canSetRoles,
   preselected,
   onDone,
 }: Omit<Props, "enabled" | "label"> & { onDone: () => void }) {
@@ -87,6 +91,16 @@ function NewUserForm({
     {},
   );
   const done = !!state.ok || !!state.password;
+  // Colunas: Membro | Vice? | Líder?  (classes fixas: o Tailwind não enxerga classe montada em runtime)
+  const extraCols = (canSetVice ? 1 : 0) + (canSetRoles ? 1 : 0);
+  const grid = cn(
+    "grid items-center gap-4",
+    extraCols === 2
+      ? "grid-cols-[1fr_2.5rem_2.5rem]"
+      : extraCols === 1
+        ? "grid-cols-[1fr_2.5rem]"
+        : "grid-cols-1",
+  );
 
   const message = state.password
     ? `Olá! Sua conta no app de escalas da Naza2 foi criada.\nAcesse: ${APP_URL}/login\nE-mail: ${state.email}\nSenha provisória: ${state.password}\nDepois de entrar, troque a senha em Conta.`
@@ -169,16 +183,22 @@ function NewUserForm({
           Ministérios{canSetRoles ? " (opcional)" : ""}
         </legend>
         <div className="max-h-56 overflow-y-auto rounded-lg border">
-          {canSetRoles && (
-            <div className="sticky top-0 grid grid-cols-[1fr_auto] gap-2 border-b bg-card px-3 py-1.5 text-xs text-muted-foreground">
+          {extraCols > 0 && (
+            <div
+              className={cn(
+                grid,
+                "sticky top-0 border-b bg-card px-3 py-1.5 text-xs text-muted-foreground",
+              )}
+            >
               <span>Membro</span>
-              <span>Líder</span>
+              {canSetVice && <span className="text-center">Vice</span>}
+              {canSetRoles && <span className="text-center">Líder</span>}
             </div>
           )}
           {ministries.map((m) => (
             <div
               key={m.id}
-              className="grid grid-cols-[1fr_auto] items-center gap-2 px-3 py-1.5 text-sm hover:bg-white/5"
+              className={cn(grid, "px-3 py-1.5 text-sm hover:bg-white/5")}
             >
               <label className="flex items-center gap-2">
                 <input
@@ -190,21 +210,31 @@ function NewUserForm({
                 />
                 {m.name}
               </label>
+              {canSetVice && (
+                <input
+                  type="checkbox"
+                  name="vice_of"
+                  value={m.id}
+                  aria-label={`Vice-líder de ${m.name}`}
+                  className="mx-auto accent-primary"
+                />
+              )}
               {canSetRoles && (
                 <input
                   type="checkbox"
                   name="leader_of"
                   value={m.id}
                   aria-label={`Líder de ${m.name}`}
-                  className="accent-primary"
+                  className="mx-auto accent-primary"
                 />
               )}
             </div>
           ))}
         </div>
-        {canSetRoles && (
+        {extraCols > 0 && (
           <p className="text-xs text-muted-foreground">
-            Marcar &quot;Líder&quot; já inclui a pessoa como membro.
+            Marcar {canSetRoles ? "Vice ou Líder" : "Vice"} já inclui a pessoa
+            como membro.
           </p>
         )}
       </fieldset>

@@ -22,6 +22,8 @@ export type Membership = {
   id: string;
   ministry_id: string;
   is_leader: boolean;
+  /** Vice-líder: mesmas permissões do líder no ministério, exceto nomear vice. */
+  is_vice_leader: boolean;
   ministry: Pick<Tables<"ministries">, "id" | "name" | "is_active">;
   role: Pick<Tables<"ministry_roles">, "id" | "name"> | null;
 };
@@ -32,7 +34,10 @@ export type Session = {
   profile: Tables<"profiles">;
   isAdmin: boolean;
   isLeader: boolean;
+  /** Ministérios que lidera como LÍDER ou VICE (acesso à área de liderança). */
   leaderOf: string[];
+  /** Só onde é líder TITULAR (pode nomear vice). */
+  mainLeaderOf: string[];
   memberships: Membership[];
 };
 
@@ -49,7 +54,7 @@ export const getSession = cache(async (): Promise<Session | null> => {
     supabase
       .from("ministry_members")
       .select(
-        "id, ministry_id, is_leader, ministry:ministries(id, name, is_active), role:ministry_roles(id, name)"
+        "id, ministry_id, is_leader, is_vice_leader, ministry:ministries(id, name, is_active), role:ministry_roles(id, name)"
       )
       .eq("profile_id", user.id),
   ]);
@@ -57,7 +62,8 @@ export const getSession = cache(async (): Promise<Session | null> => {
   if (!profile) return null;
 
   const list = (memberships ?? []) as unknown as Membership[];
-  const leaderOf = list.filter((m) => m.is_leader).map((m) => m.ministry_id);
+  const leaderOf = list.filter((m) => m.is_leader || m.is_vice_leader).map((m) => m.ministry_id);
+  const mainLeaderOf = list.filter((m) => m.is_leader).map((m) => m.ministry_id);
 
   return {
     userId: user.id,
@@ -66,6 +72,7 @@ export const getSession = cache(async (): Promise<Session | null> => {
     isAdmin: profile.role_global === "admin" && profile.active,
     isLeader: leaderOf.length > 0,
     leaderOf,
+    mainLeaderOf,
     memberships: list,
   };
 });
