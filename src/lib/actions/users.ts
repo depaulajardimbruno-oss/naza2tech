@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAdmin, requireSession } from "@/lib/auth/session";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { phoneBR } from "@/lib/phone";
 import { friendlyError, type ActionState } from "./types";
 
 export async function setUserAdmin(profileId: string, isAdmin: boolean): Promise<ActionState> {
@@ -49,7 +50,7 @@ export async function setUserActive(profileId: string, active: boolean): Promise
 const newUserSchema = z.object({
   full_name: z.string().trim().min(2, "Informe o nome").max(100),
   email: z.string().trim().toLowerCase().email("E-mail inválido"),
-  phone: z.string().trim().max(30).optional().or(z.literal("")),
+  phone: phoneBR,
   ministries: z.array(z.string().uuid()).default([]),
   leader_of: z.array(z.string().uuid()).default([]),
   vice_of: z.array(z.string().uuid()).default([]),
@@ -108,11 +109,11 @@ export async function createUser(_p: CreateUserState, fd: FormData): Promise<Cre
       email: d.email,
       password,
       email_confirm: true,
-      user_metadata: { full_name: d.full_name, phone: d.phone || null },
+      user_metadata: { full_name: d.full_name, phone: d.phone },
     });
     if (error) return { error: friendlyError(error.message) };
     profileId = data.user.id;
-    await admin.from("profiles").update({ full_name: d.full_name, phone: d.phone || null }).eq("id", profileId);
+    await admin.from("profiles").update({ full_name: d.full_name, phone: d.phone }).eq("id", profileId);
   }
 
   if (session.isAdmin && d.is_admin) {

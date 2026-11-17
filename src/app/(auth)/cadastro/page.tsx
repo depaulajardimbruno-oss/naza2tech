@@ -1,6 +1,7 @@
 "use client";
 /** Cadastro de voluntário. Depois do cadastro o ADM vincula a pessoa a um ministério. */
 import Link from "next/link";
+import { PhoneInput } from "@/components/forms/phone-input";
 import { useActionState } from "react";
 import { signUp, type AuthState } from "@/lib/auth/actions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -26,7 +27,7 @@ export default function CadastroPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="phone">Celular (WhatsApp)</Label>
-            <Input id="phone" name="phone" type="tel" placeholder="11 99999-9999" autoComplete="tel" />
+            <PhoneInput id="phone" name="phone" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">E-mail</Label>

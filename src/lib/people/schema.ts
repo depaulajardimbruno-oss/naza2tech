@@ -8,6 +8,7 @@
  *   profile_details  -> todo o resto                      (só a pessoa e o ADM)
  */
 import { z } from "zod";
+import { phoneBR } from "@/lib/phone";
 
 export const GENDERS = { masculino: "Masculino", feminino: "Feminino" } as const;
 export const MARITAL = {
@@ -30,7 +31,7 @@ const optDate = z
 export const personSchema = z.object({
   full_name: z.string().trim().min(3, "Informe o nome completo").max(120),
   nickname: opt(40),
-  phone: opt(30),
+  phone: phoneBR,
   birth_date: optDate,
   gender: z.enum(["masculino", "feminino"]).optional().or(z.literal("")).transform((v) => v || null),
   marital_status: z
@@ -58,7 +59,7 @@ export const personSchema = z.object({
     .transform((v) => (v === "sim" ? true : v === "nao" ? false : null)),
   baptism_date: optDate,
   emergency_name: opt(),
-  emergency_phone: opt(30),
+  emergency_phone: phoneBR,
 });
 
 export type PersonInput = z.infer<typeof personSchema>;

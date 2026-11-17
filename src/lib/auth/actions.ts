@@ -13,6 +13,7 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { z } from "zod";
+import { phoneBR } from "@/lib/phone";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthState = { error?: string; ok?: string };
@@ -48,12 +49,7 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
 
 const signUpSchema = loginSchema.extend({
   full_name: z.string().trim().min(3, "Informe seu nome completo"),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^\(?\d{2}\)?\s?9?\d{4}-?\d{4}$/, "Celular inválido (ex.: 11 99999-9999)")
-    .optional()
-    .or(z.literal("")),
+  phone: phoneBR,
 });
 
 export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {
@@ -72,7 +68,7 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     password: parsed.data.password,
     options: {
       // Esses metadados são lidos pelo trigger handle_new_user
-      data: { full_name: parsed.data.full_name, phone: parsed.data.phone || null },
+      data: { full_name: parsed.data.full_name, phone: parsed.data.phone },
       emailRedirectTo: `${origin}/auth/callback`,
     },
   });

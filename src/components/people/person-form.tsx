@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/select";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { FormMessage } from "@/components/forms/form-message";
+import { PhoneInput } from "@/components/forms/phone-input";
 
 export type PersonData = Pick<Tables<"profiles">, "full_name" | "nickname" | "phone"> &
   Partial<Omit<Tables<"profile_details">, "profile_id" | "updated_at">>;
@@ -102,14 +103,14 @@ export function PersonForm({ person, action, hidden }: { person: PersonData; act
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <Field label="WhatsApp">
-            <Input name="phone" type="tel" defaultValue={v(person.phone)} placeholder="(19) 99999-9999" />
+            <PhoneInput name="phone" defaultValue={v(person.phone)} />
           </Field>
           <div className="hidden sm:block" />
           <Field label="Contato de emergência (nome)">
             <Input name="emergency_name" defaultValue={v(person.emergency_name)} />
           </Field>
           <Field label="Telefone de emergência">
-            <Input name="emergency_phone" type="tel" defaultValue={v(person.emergency_phone)} />
+            <PhoneInput name="emergency_phone" defaultValue={v(person.emergency_phone)} />
           </Field>
         </CardContent>
       </Card>

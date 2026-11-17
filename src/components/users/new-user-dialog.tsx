@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { FormMessage } from "@/components/forms/form-message";
+import { PhoneInput } from "@/components/forms/phone-input";
 import { cn } from "@/lib/utils";
 
 const APP_URL = "https://naza2tech.vercel.app";
@@ -151,12 +152,7 @@ function NewUserForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="phone">WhatsApp (opcional)</Label>
-          <Input
-            id="phone"
-            name="phone"
-            type="tel"
-            placeholder="(19) 99999-9999"
-          />
+          <PhoneInput id="phone" name="phone" />
         </div>
       </div>
 
