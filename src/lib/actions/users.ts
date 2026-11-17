@@ -1,8 +1,8 @@
 "use server";
-/** Actions de USUÁRIOS (só ADM): criar conta, promover/rebaixar admin e ativar/desativar. */
+/** Actions de USUÁRIOS: criar conta (ADM e líder), promover/rebaixar admin e ativar/desativar (só ADM). */
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { requireAdmin } from "@/lib/auth/session";
+import { requireAdmin, requireSession } from "@/lib/auth/session";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { friendlyError, type ActionState } from "./types";
@@ -30,21 +30,28 @@ export async function setUserActive(profileId: string, active: boolean): Promise
   return { ok: active ? "Usuário ativado." : "Usuário desativado." };
 }
 
-// ---------- CRIAR USUÁRIO (ADM) ----------
+// ---------- CRIAR USUÁRIO (ADM e LÍDER) ----------
 /**
- * O ADM cadastra alguém que ainda não se cadastrou sozinho.
- * Fluxo escolhido: conta criada já confirmada + SENHA PROVISÓRIA gerada aqui.
- *   Motivo: o e-mail padrão do Supabase só entrega para membros do time do projeto
- *   e tem limite baixo por hora, então "convite por e-mail" não chega de forma confiável
- *   enquanto não houver um SMTP próprio. O ADM manda a senha pelo WhatsApp e a pessoa
- *   troca em Conta → Trocar senha.
- * O trigger handle_new_user cria o profile; aqui completamos telefone e ministérios.
+ * Cadastra alguém que ainda não se cadastrou sozinho.
+ *
+ * Quem pode o quê (a regra é aplicada AQUI, porque o cliente admin ignora o RLS):
+ *   ADM   -> qualquer ministério, pode marcar como líder e pode criar outro ADM.
+ *   Líder -> só nos ministérios que lidera, sempre como voluntário (líder/ADM é decisão do ADM).
+ *
+ * Se o e-mail já tem conta, NÃO cria outra: só vincula aos ministérios marcados
+ * (e aplica líder/ADM se quem pediu for ADM). Assim o líder consegue "trazer" alguém
+ * que já usa o app sem precisar do ADM.
+ *
+ * Conta nova = já confirmada + SENHA PROVISÓRIA (mostrada uma vez). Motivo: o e-mail
+ * padrão do Supabase não entrega para endereços externos de forma confiável.
  */
 const newUserSchema = z.object({
   full_name: z.string().trim().min(2, "Informe o nome").max(100),
   email: z.string().trim().toLowerCase().email("E-mail inválido"),
   phone: z.string().trim().max(30).optional().or(z.literal("")),
   ministries: z.array(z.string().uuid()).default([]),
+  leader_of: z.array(z.string().uuid()).default([]),
+  is_admin: z.boolean().default(false),
 });
 
 export type CreateUserState = ActionState & { password?: string; email?: string };
@@ -57,7 +64,9 @@ function tempPassword() {
 }
 
 export async function createUser(_p: CreateUserState, fd: FormData): Promise<CreateUserState> {
-  await requireAdmin();
+  const session = await requireSession();
+  if (!session.isAdmin && session.leaderOf.length === 0) return { error: "Apenas ADM ou líder pode cadastrar pessoas." };
+
   const admin = createAdminClient();
   if (!admin) return { error: "Falta configurar SUPABASE_SERVICE_ROLE_KEY na Vercel." };
 
@@ -66,32 +75,57 @@ export async function createUser(_p: CreateUserState, fd: FormData): Promise<Cre
     email: fd.get("email"),
     phone: fd.get("phone") ?? "",
     ministries: fd.getAll("ministries").map(String),
+    leader_of: fd.getAll("leader_of").map(String),
+    is_admin: fd.get("is_admin") === "on",
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const d = parsed.data;
 
-  const password = tempPassword();
-  const { data, error } = await admin.auth.admin.createUser({
-    email: d.email,
-    password,
-    email_confirm: true,
-    user_metadata: { full_name: d.full_name, phone: d.phone || null },
-  });
-  if (error) {
-    if (/already|registered|exists/i.test(error.message)) return { error: "Já existe uma conta com esse e-mail." };
-    return { error: friendlyError(error.message) };
+  // ---- Permissões ----
+  if (!session.isAdmin) {
+    if (d.is_admin || d.leader_of.length) return { error: "Só o ADM pode criar líderes ou administradores." };
+    const outside = d.ministries.filter((m) => !session.leaderOf.includes(m));
+    if (outside.length) return { error: "Você só pode cadastrar pessoas nos ministérios que lidera." };
+    if (!d.ministries.length) return { error: "Marque o ministério da pessoa." };
+  }
+  const memberOf = [...new Set([...d.ministries, ...d.leader_of])]; // líder também é membro
+
+  // ---- Conta: existente ou nova ----
+  const { data: existing } = await admin.from("profiles").select("id").eq("email", d.email).maybeSingle();
+  let profileId = existing?.id;
+  let password: string | undefined;
+
+  if (!profileId) {
+    password = tempPassword();
+    const { data, error } = await admin.auth.admin.createUser({
+      email: d.email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: d.full_name, phone: d.phone || null },
+    });
+    if (error) return { error: friendlyError(error.message) };
+    profileId = data.user.id;
+    await admin.from("profiles").update({ full_name: d.full_name, phone: d.phone || null }).eq("id", profileId);
   }
 
-  const id = data.user.id;
-  await admin.from("profiles").update({ full_name: d.full_name, phone: d.phone || null }).eq("id", id);
-  if (d.ministries.length) {
-    const { error: mErr } = await admin
-      .from("ministry_members")
-      .insert(d.ministries.map((ministry_id) => ({ profile_id: id, ministry_id })));
-    if (mErr) return { error: `Conta criada, mas falhou ao vincular ministérios: ${friendlyError(mErr.message)}`, password, email: d.email };
+  if (session.isAdmin && d.is_admin) {
+    await admin.from("profiles").update({ role_global: "admin" }).eq("id", profileId);
+  }
+
+  // ---- Vínculos (ignora os que já existem; promove a líder quando pedido) ----
+  if (memberOf.length) {
+    const { error: mErr } = await admin.from("ministry_members").upsert(
+      memberOf.map((ministry_id) => ({ profile_id: profileId!, ministry_id })),
+      { onConflict: "profile_id,ministry_id", ignoreDuplicates: true }
+    );
+    if (!mErr && d.leader_of.length) {
+      await admin.from("ministry_members").update({ is_leader: true }).eq("profile_id", profileId).in("ministry_id", d.leader_of);
+    }
+    if (mErr) return { error: `Falhou ao vincular ministérios: ${friendlyError(mErr.message)}`, password, email: d.email };
   }
 
   revalidatePath("/admin/usuarios");
   revalidatePath("/", "layout");
+  if (!password) return { ok: "Essa pessoa já tinha conta: foi vinculada ao(s) ministério(s) marcado(s)." };
   return { ok: "Usuário criado.", password, email: d.email };
 }

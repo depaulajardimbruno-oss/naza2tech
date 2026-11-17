@@ -1,4 +1,4 @@
-/** Usuários: criar conta (ADM), promover a ADM, ativar/desativar. */
+/** Usuários: criar conta (inclusive líder e ADM), promover a ADM, ativar/desativar. */
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/session";
 import { setUserAdmin, setUserActive } from "@/lib/actions/users";
@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ActionSwitch } from "@/components/forms/action-switch";
 import { Badge } from "@/components/ui/badge";
 import { adminClientConfigured, adminKeyStatus } from "@/lib/supabase/admin";
-import { NewUserDialog } from "./new-user-dialog";
+import { NewUserDialog } from "@/components/users/new-user-dialog";
 
 export default async function UsuariosPage() {
   const s = await requireAdmin();
@@ -25,7 +25,7 @@ export default async function UsuariosPage() {
         title="Usuários"
         description="Quem se cadastrou e quem você criou. Vincule a ministérios aqui ou na página de cada ministério."
       >
-        <NewUserDialog ministries={ministries ?? []} enabled={canCreate} />
+        <NewUserDialog ministries={ministries ?? []} canSetRoles enabled={canCreate} />
       </PageHeader>
       {!canCreate && (
         <p className="mb-4 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm">
