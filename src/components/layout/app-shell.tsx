@@ -55,12 +55,13 @@ export function AppShell({
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar desktop */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r bg-bg2/60 md:flex">
+      {/* Sidebar desktop: FIXA (sticky + altura da tela). Só o conteúdo rola;
+          se o menu crescer além da tela, ele rola por dentro (nav com overflow). */}
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r bg-bg2/60 md:flex">
         <div className="flex h-16 items-center border-b px-4">
           <Brand />
         </div>
-        <nav className="flex-1 space-y-4 p-3">
+        <nav className="flex-1 space-y-4 overflow-y-auto p-3">
           {groups.map((g) => (
             <div key={g}>
               {g && (
@@ -101,7 +102,8 @@ export function AppShell({
 
       {/* Conteúdo */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 items-center justify-between border-b bg-bg2/80 px-4 backdrop-blur md:hidden">
+        {/* Cabeçalho mobile também fica preso no topo */}
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-bg2/80 px-4 backdrop-blur md:hidden">
           <Brand />
           <Link href="/conta" className="text-sm text-muted-foreground">
             {userName.split(" ")[0]}
