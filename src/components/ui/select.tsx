@@ -3,6 +3,10 @@
  * Escolha deliberada: o <select> do navegador funciona dentro de <form> com
  * server actions sem JS extra e é acessível no celular. Se precisar de busca
  * ou multi-seleção no futuro, troque pelo Select do Radix.
+ *
+ * Cores da lista aberta: `[&_option]` (e não `[&>option]`) para valer também dentro de
+ * <optgroup>; `color-scheme: dark` faz o Windows/Chrome desenhar o menu escuro.
+ * Sem isso, no Windows as opções podem sair texto branco em fundo branco (invisíveis).
  */
 import * as React from "react";
 import { ChevronDownIcon } from "lucide-react";
@@ -13,7 +17,7 @@ function NativeSelect({ className, children, ...props }: React.ComponentProps<"s
     <div className="relative">
       <select
         className={cn(
-          "h-9 w-full appearance-none rounded-lg border border-input bg-white/5 pl-3 pr-8 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-50 [&>option]:bg-bg2 [&>option]:text-foreground",
+          "h-9 w-full appearance-none rounded-lg border border-input bg-white/5 pl-3 pr-8 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-50 [color-scheme:dark] [&_option]:bg-bg2 [&_option]:text-foreground [&_optgroup]:bg-bg2 [&_optgroup]:text-muted-foreground",
           className
         )}
         {...props}
