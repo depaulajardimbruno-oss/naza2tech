@@ -3,7 +3,9 @@
  * A lista de "pessoas disponíveis" para adicionar são todos os perfis ativos
  * que ainda não estão neste ministério.
  */
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +38,22 @@ export default async function MinistryDetailPage({ params }: PageProps<"/admin/m
   return (
     <>
       <PageHeader title={ministry.name} description="Dados, cargos e equipe do ministério.">
-        {ministry.is_active ? <Badge variant="success">Ativo</Badge> : <Badge variant="secondary">Inativo</Badge>}
+        <div className="flex flex-wrap items-center gap-2">
+          {ministry.scales_enabled && (
+            <>
+              <Button asChild size="sm">
+                <Link href={`/lider/${id}/escalas`}>Montar escala</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link href={`/lider/${id}/pendencias`}>Pendências</Link>
+              </Button>
+            </>
+          )}
+          <Button asChild size="sm" variant="outline">
+            <Link href={`/lider/${id}/eventos`}>Eventos</Link>
+          </Button>
+          {ministry.is_active ? <Badge variant="success">Ativo</Badge> : <Badge variant="secondary">Inativo</Badge>}
+        </div>
       </PageHeader>
 
       <div className="grid gap-6 lg:grid-cols-3">

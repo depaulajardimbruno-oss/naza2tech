@@ -35,7 +35,8 @@ function refresh(ministryId?: string) {
 const assignSchema = z.object({
   ministry_id: z.string().uuid(),
   event_id: z.string().uuid(),
-  member_id: z.string().uuid("Escolha a pessoa"),
+  // ministry_members.id, ou "p:<profileId>" quando o ADM escala alguém de fora da equipe
+  member_id: z.string().regex(/^(p:)?[0-9a-f-]{36}$/i, "Escolha a pessoa"),
   role_id: z.string().uuid("Escolha a função"),
 });
 
@@ -48,9 +49,23 @@ export async function assignSchedule(_p: ScheduleState, fd: FormData): Promise<S
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const d = parsed.data;
-  await requireLeaderOf(d.ministry_id);
-
+  const session = await requireLeaderOf(d.ministry_id);
   const supabase = await createClient();
+
+  // ADM escalando alguém que ainda não é da equipe: coloca na equipe primeiro (com essa função como cargo padrão).
+  if (d.member_id.startsWith("p:")) {
+    if (!session.isAdmin) return { error: "Só o ADM pode escalar alguém de fora da equipe." };
+    const { data: mm, error: mErr } = await supabase
+      .from("ministry_members")
+      .insert({ profile_id: d.member_id.slice(2), ministry_id: d.ministry_id, ministry_role_id: d.role_id })
+      .select("id")
+      .single();
+    if (mErr) return { error: friendlyError(mErr.message) };
+    d.member_id = mm.id;
+    revalidatePath(`/admin/ministerios/${d.ministry_id}`);
+    revalidatePath(`/lider/${d.ministry_id}/membros`);
+  }
+
   const { error } = await supabase.from("schedules").insert({
     ministry_id: d.ministry_id,
     event_id: d.event_id,

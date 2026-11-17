@@ -12,7 +12,11 @@ import { Button } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/select";
 import { SubmitButton } from "@/components/forms/submit-button";
 
-export type MemberOption = { id: string; name: string; defaultRoleId: string | null };
+/**
+ * `id` = ministry_members.id para quem já é da equipe;
+ * `p:<profileId>` para pessoa de fora (só ADM) — ao escalar, ela entra na equipe.
+ */
+export type MemberOption = { id: string; name: string; defaultRoleId: string | null; outside?: boolean };
 
 export function AssignForm({
   ministryId,
@@ -67,11 +71,26 @@ export function AssignForm({
         <option value="" disabled>
           Pessoa…
         </option>
-        {members.map((m) => (
-          <option key={m.id} value={m.id}>
-            {m.name}
-          </option>
-        ))}
+        <optgroup label="Equipe">
+          {members
+            .filter((m) => !m.outside)
+            .map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
+            ))}
+        </optgroup>
+        {members.some((m) => m.outside) && (
+          <optgroup label="Outras pessoas (entram na equipe)">
+            {members
+              .filter((m) => m.outside)
+              .map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+          </optgroup>
+        )}
       </NativeSelect>
       <NativeSelect
         name="role_id"

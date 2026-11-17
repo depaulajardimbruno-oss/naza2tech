@@ -128,6 +128,20 @@ export default async function AdminEscalasPage({ searchParams }: PageProps<"/adm
         )}
       </form>
 
+      <div className="mb-6 flex flex-wrap items-center gap-2 text-sm">
+        <span className="text-muted-foreground">Montar escala:</span>
+        {ministries?.map((m) => (
+          <Link
+            key={m.id}
+            href={`/lider/${m.id}/escalas`}
+            className="rounded-full border px-3 py-1 hover:bg-white/5"
+            style={{ borderColor: ministryColor(m.id) }}
+          >
+            {m.name}
+          </Link>
+        ))}
+      </div>
+
       <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {stat("Escalados", n.total)}
         {stat("Confirmados", n.confirmado, "text-success")}
