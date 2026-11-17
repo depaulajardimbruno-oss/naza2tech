@@ -1,6 +1,7 @@
 /** Usuários: lista, criar conta (inclusive líder e ADM), promover a ADM, ativar/desativar.
  *  Clicar no nome abre a ficha completa (/admin/usuarios/[id]). */
 import Link from "next/link";
+import { dateTimeBR, lastSeen } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/session";
 import { setUserAdmin, setUserActive } from "@/lib/actions/users";
@@ -20,6 +21,9 @@ export default async function UsuariosPage() {
     .order("full_name");
   const { data: ministries } = await supabase.from("ministries").select("id, name").eq("is_active", true).order("name");
   const canCreate = adminClientConfigured();
+  // Último acesso vem de auth.users via função só-ADM (migration 20261117000700)
+  const { data: signIns } = await supabase.rpc("admin_user_sign_ins");
+  const lastLogin = new Map((signIns ?? []).map((u) => [u.id, u.last_sign_in_at]));
 
   return (
     <>
@@ -40,6 +44,7 @@ export default async function UsuariosPage() {
             <TableHead>Nome</TableHead>
             <TableHead>Contato</TableHead>
             <TableHead>Ministérios</TableHead>
+            <TableHead>Último acesso</TableHead>
             <TableHead>ADM</TableHead>
             <TableHead>Ativo</TableHead>
           </TableRow>
@@ -59,6 +64,12 @@ export default async function UsuariosPage() {
               </TableCell>
               <TableCell className="text-muted-foreground">
                 {u.ministry_members?.map((mm) => mm.ministry?.name).filter(Boolean).join(", ") || "—"}
+              </TableCell>
+              <TableCell className="whitespace-nowrap text-muted-foreground">
+                {(() => {
+                  const at = lastLogin.get(u.id) ?? null;
+                  return <span title={at ? dateTimeBR(at) : undefined}>{lastSeen(at)}</span>;
+                })()}
               </TableCell>
               <TableCell>
                 <ActionSwitch

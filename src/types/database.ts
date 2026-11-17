@@ -407,6 +407,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_user_sign_ins: {
+        Args: never
+        Returns: { created_at: string; id: string; last_sign_in_at: string | null }[]
+      }
       check_schedule_conflicts: {
         Args: { p_event_id: string; p_member_id: string }
         Returns: {

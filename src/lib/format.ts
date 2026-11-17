@@ -52,3 +52,28 @@ export function monthWeeks(ym: string) {
   }
   return weeks;
 }
+
+/**
+ * Data/hora relativa em pt-BR para "último acesso": "agora há pouco", "há 3 horas",
+ * "ontem", "há 5 dias"; acima de 30 dias mostra a data. null -> "Nunca entrou".
+ */
+export function lastSeen(iso: string | null) {
+  if (!iso) return "Nunca entrou";
+  const diff = Date.now() - new Date(iso).getTime();
+  const min = Math.floor(diff / 60_000);
+  if (min < 5) return "Agora há pouco";
+  if (min < 60) return `Há ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `Há ${h} h`;
+  const d = Math.floor(h / 24);
+  if (d === 1) return "Ontem";
+  if (d <= 30) return `Há ${d} dias`;
+  return new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short" }).format(new Date(iso));
+}
+
+/** Data e hora completas em Brasília, ex.: "17/11/2026 20:55". */
+export function dateTimeBR(iso: string) {
+  return new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" }).format(
+    new Date(iso)
+  );
+}

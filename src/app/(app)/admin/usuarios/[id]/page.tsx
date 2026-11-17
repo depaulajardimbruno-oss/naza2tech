@@ -21,6 +21,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ActionSwitch } from "@/components/forms/action-switch";
 import { ActionButton } from "@/components/forms/action-button";
 import { AccessCard } from "./access-card";
+import { dateTimeBR, lastSeen } from "@/lib/format";
 import { AddMinistryForm } from "./add-ministry-form";
 
 export default async function UserDetailPage({ params }: PageProps<"/admin/usuarios/[id]">) {
@@ -38,6 +39,8 @@ export default async function UserDetailPage({ params }: PageProps<"/admin/usuar
     supabase.from("ministries").select("id, name").eq("is_active", true).order("name"),
   ]);
   if (!profile) notFound();
+  const { data: signIns } = await supabase.rpc("admin_user_sign_ins");
+  const auth = signIns?.find((u) => u.id === id);
 
   const isSelf = profile.id === s.userId;
   const linked = new Set((memberships ?? []).map((m) => m.ministry_id));
@@ -73,6 +76,21 @@ export default async function UserDetailPage({ params }: PageProps<"/admin/usuar
             name={profile.full_name}
             enabled={adminClientConfigured()}
           >
+            <div className="space-y-1 border-t pt-4 text-sm">
+              <p className="flex justify-between">
+                <span className="text-muted-foreground">Último acesso</span>
+                <span title={auth?.last_sign_in_at ? dateTimeBR(auth.last_sign_in_at) : undefined}>
+                  {lastSeen(auth?.last_sign_in_at ?? null)}
+                  {auth?.last_sign_in_at && <span className="text-muted-foreground"> · {dateTimeBR(auth.last_sign_in_at)}</span>}
+                </span>
+              </p>
+              {auth?.created_at && (
+                <p className="flex justify-between">
+                  <span className="text-muted-foreground">Conta criada</span>
+                  <span>{dateTimeBR(auth.created_at)}</span>
+                </p>
+              )}
+            </div>
             <div className="space-y-3 border-t pt-4 text-sm">
               <div className="flex items-center justify-between">
                 <span>Administrador geral</span>
