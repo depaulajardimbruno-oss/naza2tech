@@ -13,6 +13,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin, requireSession } from "@/lib/auth/session";
 import { parsePerson, splitPerson } from "@/lib/people/schema";
+import { generateStrongPassword } from "@/lib/password";
 import { friendlyError, type ActionState } from "./types";
 
 async function savePerson(profileId: string, fd: FormData): Promise<ActionState> {
@@ -64,8 +65,7 @@ export async function adminResetPassword(profileId: string): Promise<ActionState
   await requireAdmin();
   const admin = createAdminClient();
   if (!admin) return { error: "Falta configurar SUPABASE_SERVICE_ROLE_KEY na Vercel." };
-  const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
-  const password = Array.from(crypto.getRandomValues(new Uint8Array(10)), (b) => chars[b % chars.length]).join("");
+  const password = generateStrongPassword(); // cumpre a política (lib/password.ts)
   const { error } = await admin.auth.admin.updateUserById(profileId, { password });
   if (error) return { error: friendlyError(error.message) };
   return { ok: "Senha redefinida.", password };

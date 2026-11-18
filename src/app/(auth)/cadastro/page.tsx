@@ -2,6 +2,7 @@
 /** Cadastro de voluntário. Depois do cadastro o ADM vincula a pessoa a um ministério. */
 import Link from "next/link";
 import { PhoneInput } from "@/components/forms/phone-input";
+import { PasswordFields } from "@/components/forms/password-fields";
 import { useActionState } from "react";
 import { signUp, type AuthState } from "@/lib/auth/actions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -33,10 +34,7 @@ export default function CadastroPage() {
             <Label htmlFor="email">E-mail</Label>
             <Input id="email" name="email" type="email" autoComplete="email" required />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
-            <Input id="password" name="password" type="password" autoComplete="new-password" minLength={6} required />
-          </div>
+          <PasswordFields />
           <FormMessage error={state.error} ok={state.ok} />
           <SubmitButton className="w-full" pendingText="Criando...">
             Criar conta

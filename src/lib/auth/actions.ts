@@ -14,13 +14,15 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { phoneBR } from "@/lib/phone";
+import { passwordSchema } from "@/lib/password";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthState = { error?: string; ok?: string };
 
+// Login não aplica a política nova (contas antigas continuam entrando).
 const loginSchema = z.object({
   email: z.string().email("E-mail inválido"),
-  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+  password: z.string().min(1, "Informe a senha"),
 });
 
 export async function signIn(_prev: AuthState, formData: FormData): Promise<AuthState> {
@@ -47,15 +49,22 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
   redirect(next.startsWith("/") ? next : "/dashboard");
 }
 
-const signUpSchema = loginSchema.extend({
-  full_name: z.string().trim().min(3, "Informe seu nome completo"),
-  phone: phoneBR,
-});
+// Cadastro: senha forte + confirmação (política em lib/password.ts)
+const signUpSchema = z
+  .object({
+    email: z.string().email("E-mail inválido"),
+    password: passwordSchema,
+    password_confirm: z.string(),
+    full_name: z.string().trim().min(3, "Informe seu nome completo"),
+    phone: phoneBR,
+  })
+  .refine((v) => v.password === v.password_confirm, { message: "As senhas não conferem." });
 
 export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const parsed = signUpSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
+    password_confirm: formData.get("password_confirm"),
     full_name: formData.get("full_name"),
     phone: formData.get("phone"),
   });

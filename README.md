@@ -60,6 +60,9 @@ Fluxo: **líder/vice escala** (rascunho) → **publica** → **voluntário confi
 - Status: Rascunho (cinza) · Aguardando (amarelo) · Confirmado (verde) · Não vai (vermelho) — `components/schedules/status-badge.tsx`.
 - Código: `lib/actions/schedules.ts`, `lib/schedules/pending.ts`, `components/schedules/*`.
 
+## Senhas
+Política única em `src/lib/password.ts`: mínimo 8, maiúscula, minúscula, número e caractere especial, sempre com **confirmação**. Vale no cadastro, em Conta → Trocar senha (destino do "esqueci a senha") e nas senhas provisórias do ADM (`generateStrongPassword`, 12 caracteres). O login não aplica a regra, para contas antigas continuarem entrando. Campo com checklist: `components/forms/password-fields.tsx`.
+
 ## Ficha do usuário e cadastro completo
 - `/admin/usuarios` → clique no nome → `/admin/usuarios/[id]`: cadastro completo, **e-mail de login**, **redefinir senha** (senha provisória mostrada uma vez), ADM/ativo e ministérios.
 - A própria pessoa completa o cadastro em **Conta** (mesmo formulário: `components/people/person-form.tsx`, regras em `lib/people/schema.ts`, actions em `lib/actions/people.ts`). Só o nome é obrigatório; CEP preenche o endereço pela ViaCEP.

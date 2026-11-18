@@ -6,6 +6,7 @@ import { requireAdmin, requireSession } from "@/lib/auth/session";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { phoneBR } from "@/lib/phone";
+import { generateStrongPassword } from "@/lib/password";
 import { friendlyError, type ActionState } from "./types";
 
 export async function setUserAdmin(profileId: string, isAdmin: boolean): Promise<ActionState> {
@@ -59,12 +60,6 @@ const newUserSchema = z.object({
 
 export type CreateUserState = ActionState & { password?: string; email?: string };
 
-function tempPassword() {
-  // Sem caracteres ambíguos (0/O, 1/l/I) para ditar ou mandar por mensagem.
-  const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
-  const bytes = crypto.getRandomValues(new Uint8Array(10));
-  return Array.from(bytes, (b) => chars[b % chars.length]).join("");
-}
 
 export async function createUser(_p: CreateUserState, fd: FormData): Promise<CreateUserState> {
   const session = await requireSession();
@@ -104,7 +99,7 @@ export async function createUser(_p: CreateUserState, fd: FormData): Promise<Cre
   let password: string | undefined;
 
   if (!profileId) {
-    password = tempPassword();
+    password = generateStrongPassword(); // cumpre a política (lib/password.ts)
     const { data, error } = await admin.auth.admin.createUser({
       email: d.email,
       password,
