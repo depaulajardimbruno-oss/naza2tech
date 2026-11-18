@@ -225,11 +225,11 @@ export default async function AgendaPage({
             byDate={byDate}
             today={today}
             selected={selected}
-            hrefFor={(date) => href({ dia: date })}
+            hrefFor={(date) => `${href({ dia: date })}#detalhe-dia`}
             mine={myScales}
           />
 
-          <div className="mt-6">
+          <div id="detalhe-dia" className="mt-6 scroll-mt-20">
             {selectedEvents.length ? (
               <EventsList
                 events={selectedEvents}

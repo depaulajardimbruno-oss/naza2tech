@@ -57,7 +57,6 @@ export function MonthCalendar({
             <Link
               key={date}
               href={hrefFor(date)}
-              scroll={false}
               aria-label={`${date}: ${events.length} evento(s)`}
               className={cn(
                 "min-h-16 border-b border-r p-1.5 transition-colors hover:bg-accent/40 md:min-h-28",

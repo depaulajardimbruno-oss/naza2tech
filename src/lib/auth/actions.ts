@@ -19,6 +19,17 @@ import { createClient } from "@/lib/supabase/server";
 
 export type AuthState = { error?: string; ok?: string };
 
+// O Supabase Auth só responde em inglês; traduzimos os erros que o usuário pode ver.
+function translateAuthError(message: string): string {
+  if (message === "Invalid login credentials") return "E-mail ou senha incorretos";
+  if (message === "Email not confirmed") return "Confirme seu e-mail antes de entrar";
+  if (/email rate limit exceeded/i.test(message))
+    return "Muitos cadastros em pouco tempo. Aguarde alguns minutos e tente de novo.";
+  if (/email address .* is invalid/i.test(message))
+    return "Esse e-mail não foi aceito. Confira se está digitado certo.";
+  return message;
+}
+
 // Login não aplica a política nova (contas antigas continuam entrando).
 const loginSchema = z.object({
   email: z.string().email("E-mail inválido"),
@@ -42,16 +53,7 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
       return { error: "Seu acesso está desativado. Fale com o administrador ou com o líder do seu ministério." };
     }
   }
-  if (error) {
-    return {
-      error:
-        error.message === "Invalid login credentials"
-          ? "E-mail ou senha incorretos"
-          : error.message === "Email not confirmed"
-            ? "Confirme seu e-mail antes de entrar"
-            : error.message,
-    };
-  }
+  if (error) return { error: translateAuthError(error.message) };
 
   const next = String(formData.get("next") ?? "") || "/dashboard";
   redirect(next.startsWith("/") ? next : "/dashboard");
@@ -89,7 +91,7 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
       emailRedirectTo: `${origin}/auth/callback`,
     },
   });
-  if (error) return { error: error.message };
+  if (error) return { error: translateAuthError(error.message) };
 
   // Se a confirmação de e-mail estiver desligada no Supabase, já há sessão.
   if (data.session) redirect("/dashboard");
@@ -105,7 +107,7 @@ export async function resetPassword(_prev: AuthState, formData: FormData): Promi
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${origin}/auth/callback?next=/conta`,
   });
-  if (error) return { error: error.message };
+  if (error) return { error: translateAuthError(error.message) };
   return { ok: "Se o e-mail existir, enviamos um link para redefinir a senha." };
 }
 
