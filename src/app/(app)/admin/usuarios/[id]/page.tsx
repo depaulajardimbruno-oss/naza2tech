@@ -11,7 +11,8 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/session";
 import { adminClientConfigured } from "@/lib/supabase/admin";
 import { adminSavePerson } from "@/lib/actions/people";
-import { setUserAdmin, setUserActive } from "@/lib/actions/users";
+import { setUserAdmin, setUserActive, deleteUser } from "@/lib/actions/users";
+import { DangerZone } from "@/components/forms/danger-zone";
 import { removeMember } from "@/lib/actions/members";
 import { PageHeader } from "@/components/layout/page-header";
 import { PersonForm } from "@/components/people/person-form";
@@ -158,6 +159,19 @@ export default async function UserDetailPage({ params }: PageProps<"/admin/usuar
               {available.length > 0 && <AddMinistryForm profileId={profile.id} ministries={available} />}
             </CardContent>
           </Card>
+
+          {!isSelf && (
+            <DangerZone
+              title="Excluir usuário"
+              description="Só é possível se a pessoa não estiver em nenhum ministério nem escala. Para guardar o histórico, prefira desativar (switch Ativo)."
+              confirm={`Excluir ${profile.full_name}? O login e o cadastro serão apagados e isso não pode ser desfeito.`}
+              label="Excluir usuário"
+              action={async () => {
+                "use server";
+                return deleteUser(id);
+              }}
+            />
+          )}
         </div>
       </div>
     </>

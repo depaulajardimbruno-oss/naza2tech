@@ -10,6 +10,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/session";
 import { friendlyError, type ActionState } from "./types";
+import { blockersMessage } from "./blockers";
 
 const ministrySchema = z.object({
   name: z.string().trim().min(2, "Nome muito curto").max(60),
@@ -72,6 +73,21 @@ export async function toggleMinistryScales(id: string, enabled: boolean) {
   return { ok: enabled ? "Escala ativada." : "Escala desativada." };
 }
 
+/**
+ * Excluir ministério (só ADM). Bloqueado se tiver cargos, membros, eventos,
+ * cultos fixos ou escalas — a mensagem diz o quê. Para manter histórico, desative.
+ */
+export async function deleteMinistry(id: string): Promise<ActionState> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const blocked = await blockersMessage(supabase, "ministerio", id);
+  if (blocked) return { error: blocked };
+  const { error } = await supabase.from("ministries").delete().eq("id", id);
+  if (error) return { error: friendlyError(error.message) };
+  revalidatePath("/", "layout");
+  redirect("/admin/ministerios");
+}
+
 // ---------- CARGOS ----------
 
 export async function createRole(_p: ActionState, fd: FormData): Promise<ActionState> {
@@ -91,6 +107,8 @@ export async function createRole(_p: ActionState, fd: FormData): Promise<ActionS
 export async function deleteRole(id: string, ministryId: string): Promise<ActionState> {
   await requireAdmin();
   const supabase = await createClient();
+  const blocked = await blockersMessage(supabase, "cargo", id);
+  if (blocked) return { error: blocked };
   const { error } = await supabase.from("ministry_roles").delete().eq("id", id);
   if (error) return { error: friendlyError(error.message) };
   revalidatePath(`/admin/ministerios/${ministryId}`);

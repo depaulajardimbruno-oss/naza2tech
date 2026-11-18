@@ -60,6 +60,10 @@ Fluxo: **líder/vice escala** (rascunho) → **publica** → **voluntário confi
 - Status: Rascunho (cinza) · Aguardando (amarelo) · Confirmado (verde) · Não vai (vermelho) — `components/schedules/status-badge.tsx`.
 - Código: `lib/actions/schedules.ts`, `lib/schedules/pending.ts`, `components/schedules/*`.
 
+## Exclusões e integridade
+Nada é apagado se tiver dependência. Banco: FKs de negócio em **RESTRICT** (ministério, cargo, membro, evento, escala, cultos fixos, perfil). Continuam CASCADE só extensões do mesmo registro (profile_details, notification_log, event_template_runs).
+Antes de excluir, o app chama `delete_blockers(entidade, id)` e mostra o que impede (ex.: "Escalas (1): 22/11 Culto Devocional (Obreiros)") — `src/lib/actions/blockers.ts`. Vale para usuário, ministério, cargo, evento e remoção de membro. Para manter histórico, **desativar** em vez de excluir. Migration `20261117000800_integridade_exclusoes.sql`.
+
 ## Senhas
 Política única em `src/lib/password.ts`: mínimo 8, maiúscula, minúscula, número e caractere especial, sempre com **confirmação**. Vale no cadastro, em Conta → Trocar senha (destino do "esqueci a senha") e nas senhas provisórias do ADM (`generateStrongPassword`, 12 caracteres). O login não aplica a regra, para contas antigas continuarem entrando. Campo com checklist: `components/forms/password-fields.tsx`.
 

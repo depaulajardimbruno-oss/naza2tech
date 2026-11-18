@@ -9,6 +9,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin, requireLeaderOf } from "@/lib/auth/session";
 import { friendlyError, type ActionState } from "./types";
+import { blockersMessage } from "./blockers";
 
 function paths(ministryId: string) {
   // inclui a lista e as fichas de usuário (mostram os ministérios de cada pessoa)
@@ -54,6 +55,8 @@ export async function setMemberRole(memberId: string, ministryId: string, roleId
 export async function removeMember(memberId: string, ministryId: string): Promise<ActionState> {
   if (!(await requireMainLeader(ministryId))) return { error: "Só o líder do ministério pode remover pessoas da equipe." };
   const supabase = await createClient();
+  const blocked = await blockersMessage(supabase, "membro", memberId);
+  if (blocked) return { error: blocked };
   const { error } = await supabase.from("ministry_members").delete().eq("id", memberId);
   if (error) return { error: friendlyError(error.message) };
   paths(ministryId).forEach((p) => revalidatePath(p));

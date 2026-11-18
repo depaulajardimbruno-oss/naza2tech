@@ -6,6 +6,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { DangerZone } from "@/components/forms/danger-zone";
+import { deleteMinistry } from "@/lib/actions/ministries";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -72,6 +74,19 @@ export default async function MinistryDetailPage({ params }: PageProps<"/admin/m
             <MembersTable ministryId={id} members={members ?? []} roles={roles ?? []} canSetLeader canSetVice canRemove />
           </CardContent>
         </Card>
+      </div>
+
+      <div className="mt-8 max-w-xl">
+        <DangerZone
+          title="Excluir ministério"
+          description="Só é possível se não houver cargos, membros, eventos, cultos fixos nem escalas. Para guardar o histórico, prefira desativar (switch Ativo)."
+          confirm={`Excluir o ministério ${ministry.name}? Esta ação não pode ser desfeita.`}
+          label="Excluir ministério"
+          action={async () => {
+            "use server";
+            return deleteMinistry(id);
+          }}
+        />
       </div>
     </>
   );

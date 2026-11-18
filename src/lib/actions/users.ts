@@ -8,6 +8,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { phoneBR } from "@/lib/phone";
 import { generateStrongPassword } from "@/lib/password";
 import { friendlyError, type ActionState } from "./types";
+import { blockersMessage } from "./blockers";
+import { redirect } from "next/navigation";
 
 export async function setUserAdmin(profileId: string, isAdmin: boolean): Promise<ActionState> {
   const s = await requireAdmin();
@@ -144,4 +146,24 @@ export async function createUser(_p: CreateUserState, fd: FormData): Promise<Cre
   revalidatePath("/", "layout");
   if (!password) return { ok: "Essa pessoa já tinha conta: foi vinculada ao(s) ministério(s) marcado(s)." };
   return { ok: "Usuário criado.", password, email: d.email };
+}
+
+/**
+ * Excluir usuário (só ADM, não a si mesmo). Bloqueado se estiver em ministério ou escala
+ * — a mensagem lista onde. Apaga o login (auth) e, em cascata, o perfil e a ficha pessoal.
+ * Para manter o histórico de escalas, prefira DESATIVAR.
+ */
+export async function deleteUser(profileId: string): Promise<ActionState> {
+  const s = await requireAdmin();
+  if (profileId === s.userId) return { error: "Você não pode excluir a si mesmo." };
+  const supabase = await createClient();
+  const blocked = await blockersMessage(supabase, "usuario", profileId);
+  if (blocked) return { error: blocked };
+
+  const admin = createAdminClient();
+  if (!admin) return { error: "Falta configurar SUPABASE_SERVICE_ROLE_KEY na Vercel." };
+  const { error } = await admin.auth.admin.deleteUser(profileId);
+  if (error) return { error: friendlyError(error.message) };
+  revalidatePath("/admin/usuarios");
+  redirect("/admin/usuarios");
 }

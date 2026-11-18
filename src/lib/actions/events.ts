@@ -10,6 +10,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin, requireLeaderOf, requireSession } from "@/lib/auth/session";
 import { friendlyError, type ActionState } from "./types";
+import { blockersMessage } from "./blockers";
 
 const time = z.string().regex(/^\d{2}:\d{2}$/, "Horário inválido");
 const eventSchema = z.object({
@@ -56,6 +57,8 @@ export async function createEvent(_p: ActionState, fd: FormData): Promise<Action
 export async function deleteEvent(id: string): Promise<ActionState> {
   await requireSession();
   const supabase = await createClient();
+  const blocked = await blockersMessage(supabase, "evento", id).catch(() => null);
+  if (blocked && !blocked.startsWith("Não foi possível")) return { error: blocked };
   // O RLS decide se pode: filtra por 0 linhas se não for ADM/líder dono.
   const { data, error } = await supabase.from("events").delete().eq("id", id).select("id");
   if (error) return { error: friendlyError(error.message) };

@@ -411,6 +411,10 @@ export type Database = {
         Args: never
         Returns: { created_at: string; id: string; last_sign_in_at: string | null }[]
       }
+      delete_blockers: {
+        Args: { p_entity: string; p_id: string }
+        Returns: { exemplos: string | null; item: string; total: number }[]
+      }
       check_schedule_conflicts: {
         Args: { p_event_id: string; p_member_id: string }
         Returns: {
