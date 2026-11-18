@@ -446,6 +446,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      upcoming_birthdays: {
+        Args: { p_days?: number }
+        Returns: { profile_id: string; name: string; day: number; month: number; days_until: number }[]
+      }
       admin_user_sign_ins: {
         Args: never
         Returns: { created_at: string; id: string; last_sign_in_at: string | null }[]

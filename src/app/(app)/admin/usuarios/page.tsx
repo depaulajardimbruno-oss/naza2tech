@@ -12,16 +12,35 @@ import { ActionSwitch } from "@/components/forms/action-switch";
 import { Badge } from "@/components/ui/badge";
 import { adminClientConfigured, adminKeyStatus } from "@/lib/supabase/admin";
 import { buttonVariants } from "@/components/ui/button";
+import { UserFilters } from "@/components/users/user-filters";
 import { NewUserDialog } from "@/components/users/new-user-dialog";
 
-export default async function UsuariosPage() {
+/** minúsculas e sem acento: "José" acha "jose" */
+const norm = (v: string) => v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+export default async function UsuariosPage({ searchParams }: PageProps<"/admin/usuarios">) {
+  const sp = await searchParams;
+  const one = (k: string) => (Array.isArray(sp[k]) ? sp[k][0] : sp[k]) ?? "";
+  const params = { q: one("q"), ministerio: one("ministerio"), situacao: one("situacao") };
   const s = await requireAdmin();
   const supabase = await createClient();
   const { data: users } = await supabase
     .from("profiles")
-    .select("id, full_name, email, phone, role_global, active, ministry_members(ministry:ministries(name))")
+    .select("id, full_name, email, phone, role_global, active, ministry_members(ministry_id, ministry:ministries(name))")
     .order("full_name");
   const { data: ministries } = await supabase.from("ministries").select("id, name").eq("is_active", true).order("name");
+  // Filtros (a lista tem poucas dezenas de linhas: filtrar aqui é suficiente)
+  const q = norm(params.q.trim());
+  const filtered = (users ?? []).filter(
+    (u) =>
+      (!q || norm(`${u.full_name} ${u.phone ?? ""} ${displayEmail(u.email) ?? ""}`).includes(q)) &&
+      (!params.ministerio ||
+        (params.ministerio === "sem"
+          ? !u.ministry_members?.length
+          : u.ministry_members?.some((mm) => mm.ministry_id === params.ministerio))) &&
+      (!params.situacao ||
+        (params.situacao === "ativos" ? u.active : params.situacao === "inativos" ? !u.active : u.role_global === "admin")),
+  );
   const canCreate = adminClientConfigured();
   // Último acesso vem de auth.users via função só-ADM (migration 20261117235534)
   const { data: signIns } = await supabase.rpc("admin_user_sign_ins");
@@ -43,6 +62,7 @@ export default async function UsuariosPage() {
           Para criar usuários pelo painel, falta a variável <code>SUPABASE_SERVICE_ROLE_KEY</code> na Vercel. Situação: {adminKeyStatus()}.
         </p>
       )}
+      <UserFilters ministries={ministries ?? []} params={params} total={users?.length ?? 0} shown={filtered.length} />
       <Table>
         <TableHeader>
           <TableRow>
@@ -55,7 +75,14 @@ export default async function UsuariosPage() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {(users ?? []).map((u) => (
+          {filtered.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center text-muted-foreground">
+                Nenhum usuário com esses filtros.
+              </TableCell>
+            </TableRow>
+          )}
+          {filtered.map((u) => (
             <TableRow key={u.id}>
               <TableCell className="font-medium">
                 <Link href={`/admin/usuarios/${u.id}`} className="hover:text-blue2 hover:underline">

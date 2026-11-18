@@ -152,3 +152,8 @@ npm run dev                  # http://localhost:3000
   (`is_member_of()` considera a marca; menu e filtro da agenda seguem `session.seesAll`). Editar continua sendo de
   líder/vice/ADM. Para dar a visão geral a mais pessoas, basta colocá-las nesse ministério; para outro ministério
   ter o mesmo efeito: `update ministries set sees_all = true where ...`.
+- **Usuários**: busca (nome/telefone/e-mail, sem acento) + filtro de ministério ("Sem ministério" inclusive) e situação, via URL (`components/users/user-filters.tsx`).
+- **Aniversários**: `upcoming_birthdays(dias)` (migration `aniversariantes`) devolve só nome + dia/mês a quem é membro ou ADM
+  (`profile_details` continua privado); o Início mostra faixa "hoje" e os próximos 30 dias. Lembrete por WhatsApp = Fase 3.
+- **Escalas de novembro/2026 da Mídia** foram importadas direto no banco a partir das imagens (Chat, Fotografia, Projeção):
+  passadas (antes de 18/11) = publicadas e confirmadas; de hoje em diante = rascunho/pendente para o líder revisar e publicar.

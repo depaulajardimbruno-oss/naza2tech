@@ -4,6 +4,8 @@
  *  2. Pendências de escala (líder/vice/ADM) -> próximas 4 semanas por ministério
  *       ADM vê todos os ministérios com escala; líder/vice vê os seus.
  *  3. Meus ministérios (cards)
+ *  + Aniversários: faixa "hoje" e card com os próximos 30 dias (função upcoming_birthdays:
+ *    devolve só nome, dia e mês — nunca a idade).
  */
 import Link from "next/link";
 import { requireSession } from "@/lib/auth/session";
@@ -50,9 +52,21 @@ export default async function DashboardPage() {
     led.map((m) => m.id)
   );
 
+  // 4) Aniversariantes (hoje + próximos 30 dias)
+  const { data: bdays } = await supabase.rpc("upcoming_birthdays", { p_days: 30 });
+  const today = (bdays ?? []).filter((b) => b.days_until === 0);
+  const upcoming = (bdays ?? []).filter((b) => b.days_until > 0);
+  const when = (n: number) => (n === 1 ? "amanhã" : `em ${n} dias`);
+
   return (
     <>
       <PageHeader title={`Olá, ${first}`} description="Seu resumo da semana." />
+
+      {today.length > 0 && (
+        <div className="mb-6 rounded-lg border border-primary/40 bg-primary/10 p-3 text-sm">
+          🎂 <strong>Hoje é aniversário de {today.map((b) => b.name).join(", ")}!</strong> Dê os parabéns.
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* 1. Minhas escalas */}
@@ -84,6 +98,30 @@ export default async function DashboardPage() {
             <Button asChild variant={waitingMe ? "default" : "outline"} size="sm">
               <Link href="/minha-agenda">{waitingMe ? "Responder agora" : "Ver minhas escalas"}</Link>
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Aniversários */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Aniversários</CardTitle>
+            <CardDescription>Próximos 30 dias.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {upcoming.length ? (
+              <ul className="divide-y rounded-lg border">
+                {upcoming.slice(0, 8).map((b) => (
+                  <li key={b.profile_id} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
+                    <span className="font-medium">{b.name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {String(b.day).padStart(2, "0")}/{String(b.month).padStart(2, "0")} · {when(b.days_until)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">Nenhum aniversário nos próximos 30 dias.</p>
+            )}
           </CardContent>
         </Card>
 
