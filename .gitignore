@@ -46,4 +46,5 @@ supabase/.branches
 
 # setup local
 setup.cmd
+sincronizar.cmd
 setup.log
