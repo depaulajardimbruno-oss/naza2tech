@@ -47,10 +47,10 @@ supabase/
 ## Agenda x Escala
 - **Agenda** (`/agenda`): todo usuário logado vê todos os eventos. Evento é da igreja (`ministry_id` nulo, só ADM cria) ou de um ministério (ADM ou líder dele cria).
 - **Escala** é opcional por ministério (`ministries.scales_enabled`, switch em `/admin/ministerios/[id]`). Desligada: some a aba Escalas/Pendências do líder e o RLS barra novas escalas; o ministério segue usando a agenda.
-- Migration: `supabase/migrations/20261116000200_agenda_aberta_e_escala_opcional.sql`.
+- Migration: `supabase/migrations/20261117001844_agenda_aberta_e_escala_opcional.sql`.
 
 ## Cultos fixos
-Tabela `event_templates` (dia da semana + horário). A função `materialize_fixed_events()` cria os eventos reais das próximas 8 semanas e roda todo dia 03:00 (pg_cron). Datas já geradas ficam em `event_template_runs`, então um culto apagado de propósito não volta. Migration: `20261117000000_eventos_fixos.sql`.
+Tabela `event_templates` (dia da semana + horário). A função `materialize_fixed_events()` cria os eventos reais das próximas 8 semanas e roda todo dia 03:00 (pg_cron). Datas já geradas ficam em `event_template_runs`, então um culto apagado de propósito não volta. Migration: `20261117215402_eventos_fixos.sql`.
 
 ## Escalas (Fase 2)
 Fluxo: **líder/vice escala** (rascunho) → **publica** → **voluntário confirma ou recusa com motivo** (pode pedir troca).
@@ -60,14 +60,19 @@ Fluxo: **líder/vice escala** (rascunho) → **publica** → **voluntário confi
 - Status: Rascunho (cinza) · Aguardando (amarelo) · Confirmado (verde) · Não vai (vermelho) — `components/schedules/status-badge.tsx`.
 - Código: `lib/actions/schedules.ts`, `lib/schedules/pending.ts`, `components/schedules/*`.
 
+## Migrations e integração GitHub ↔ Supabase
+O projeto Supabase está ligado ao GitHub (branch `main`). A integração compara os arquivos de `supabase/migrations` com o histórico do banco (`supabase_migrations.schema_migrations`) **pelo número da versão** e aplica o que faltar.
+**Regra:** o prefixo do arquivo tem que ser exatamente a versão registrada no banco. Se a migration for aplicada pelo MCP/painel, confira a versão (`list_migrations`) e nomeie o arquivo igual **antes do push**. Versão diferente = a integração tenta rodar de novo na produção.
+`seed.sql` só roda em branches de preview (produção já foi semeada).
+
 ## Exclusões e integridade
 Nada é apagado se tiver dependência. Banco: FKs de negócio em **RESTRICT** (ministério, cargo, membro, evento, escala, cultos fixos, perfil). Continuam CASCADE só extensões do mesmo registro (profile_details, notification_log, event_template_runs).
-Antes de excluir, o app chama `delete_blockers(entidade, id)` e mostra o que impede (ex.: "Escalas (1): 22/11 Culto Devocional (Obreiros)") — `src/lib/actions/blockers.ts`. Vale para usuário, ministério, cargo, evento e remoção de membro. Para manter histórico, **desativar** em vez de excluir. Migration `20261117000800_integridade_exclusoes.sql`.
+Antes de excluir, o app chama `delete_blockers(entidade, id)` e mostra o que impede (ex.: "Escalas (1): 22/11 Culto Devocional (Obreiros)") — `src/lib/actions/blockers.ts`. Vale para usuário, ministério, cargo, evento e remoção de membro. Para manter histórico, **desativar** em vez de excluir. Migration `20261118001636_integridade_exclusoes.sql`.
 
 **Inativar** (regra do cliente: quem tem vínculo não é excluído, é inativado):
 - Usuário inativo não entra (login recusa; sessão aberta é encerrada via `/auth/inativo`) e perde todas as permissões no banco (`is_active_user()` nos helpers de RLS). Ao desativar, o ADM é avisado das escalas futuras da pessoa.
 - Ministério inativo some do menu/início/liderança de quem participa e não aceita escala nova; histórico mantido.
-- Migration `20261117000900_inativar_de_verdade.sql`.
+- Migration `20261118002141_inativar_de_verdade.sql`.
 
 ## Senhas
 Política única em `src/lib/password.ts`: mínimo 8, maiúscula, minúscula, número e caractere especial, sempre com **confirmação**. Vale no cadastro, em Conta → Trocar senha (destino do "esqueci a senha") e nas senhas provisórias do ADM (`generateStrongPassword`, 12 caracteres). O login não aplica a regra, para contas antigas continuarem entrando. Campo com checklist: `components/forms/password-fields.tsx`.
@@ -76,13 +81,13 @@ Política única em `src/lib/password.ts`: mínimo 8, maiúscula, minúscula, n�
 - `/admin/usuarios` → clique no nome → `/admin/usuarios/[id]`: cadastro completo, **e-mail de login**, **redefinir senha** (senha provisória mostrada uma vez), ADM/ativo e ministérios.
 - A própria pessoa completa o cadastro em **Conta** (mesmo formulário: `components/people/person-form.tsx`, regras em `lib/people/schema.ts`, actions em `lib/actions/people.ts`). Só o nome é obrigatório; CEP preenche o endereço pela ViaCEP.
 - Privacidade: `profiles` (nome, apelido, e-mail, WhatsApp) é visível a líderes; `profile_details` (nascimento, endereço, estado civil, batismo, emergência) só à própria pessoa e ao ADM.
-- Segurança: usuário comum não altera o próprio `active`, `email` nem `role_global` (trigger `guard_profile_role`). Migration `20261117000400_cadastro_completo.sql`.
+- Segurança: usuário comum não altera o próprio `active`, `email` nem `role_global` (trigger `guard_profile_role`). Migration `20261117223939_cadastro_completo.sql`.
 
 ## Líder e vice-líder
 - **Líder** (`is_leader`): só o ADM define.
 - **Líder** pode haver mais de um por ministério. Só líder titular (ou ADM) **coloca, remove e cadastra pessoas** na equipe.
-- **Vice-líder** (`is_vice_leader`): o líder titular (ou o ADM) nomeia. O vice ajuda na operação (cargos, eventos, escalas), mas não coloca/remove/cadastra pessoas nem nomeia vice. Migration `20261117000300_equipe_so_lider.sql`.
-- No banco: `is_leader_of()` = líder OU vice; `is_main_leader_of()` = só titular; trigger `guard_leader_flag` aplica as regras. Migration `20261117000200_vice_lider.sql`.
+- **Vice-líder** (`is_vice_leader`): o líder titular (ou o ADM) nomeia. O vice ajuda na operação (cargos, eventos, escalas), mas não coloca/remove/cadastra pessoas nem nomeia vice. Migration `20261117222602_equipe_so_lider.sql`.
+- No banco: `is_leader_of()` = líder OU vice; `is_main_leader_of()` = só titular; trigger `guard_leader_flag` aplica as regras. Migration `20261117222203_vice_lider.sql`.
 
 ## Cadastrar usuários pelo painel
 - **ADM** (`/admin/usuarios` → Novo usuário): qualquer ministério, pode marcar **Líder** por ministério e **Administrador geral**.

@@ -21,7 +21,7 @@ export default async function UsuariosPage() {
     .order("full_name");
   const { data: ministries } = await supabase.from("ministries").select("id, name").eq("is_active", true).order("name");
   const canCreate = adminClientConfigured();
-  // Último acesso vem de auth.users via função só-ADM (migration 20261117000700)
+  // Último acesso vem de auth.users via função só-ADM (migration 20261117235534)
   const { data: signIns } = await supabase.rpc("admin_user_sign_ins");
   const lastLogin = new Map((signIns ?? []).map((u) => [u.id, u.last_sign_in_at]));
 

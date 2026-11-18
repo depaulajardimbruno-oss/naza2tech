@@ -2,7 +2,7 @@
  * Mensagem de "não dá para excluir" a partir da função do banco delete_blockers().
  * Toda exclusão chama isto ANTES de apagar. Se voltar texto, a exclusão é abortada
  * e a tela mostra o que está ligado (ex.: "Escalas (1): 22/11 Culto Devocional").
- * O banco também recusa sozinho (FKs RESTRICT, migration 20261117000800) — isto aqui
+ * O banco também recusa sozinho (FKs RESTRICT, migration 20261118001636) — isto aqui
  * só deixa o aviso legível.
  */
 import type { createClient } from "@/lib/supabase/server";

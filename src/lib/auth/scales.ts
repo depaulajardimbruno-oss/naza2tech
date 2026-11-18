@@ -2,7 +2,7 @@
  * Guard das telas de ESCALA de um ministério.
  * Ministério com `scales_enabled = false` só usa a agenda; quem tentar abrir
  * /escalas ou /pendencias pela URL volta para a aba de eventos.
- * (O RLS também impede criar escalas nesse caso — ver migration 20261116000200.)
+ * (O RLS também impede criar escalas nesse caso — ver migration 20261117001844.)
  */
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
