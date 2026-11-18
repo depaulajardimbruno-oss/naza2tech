@@ -61,7 +61,9 @@ export const getSession = cache(async (): Promise<Session | null> => {
 
   if (!profile) return null;
 
-  const list = (memberships ?? []) as unknown as Membership[];
+  // Ministério INATIVO some do uso (menu, início, liderança, minhas escalas).
+  // O ADM continua vendo tudo pelas telas de Administração.
+  const list = ((memberships ?? []) as unknown as Membership[]).filter((m) => m.ministry?.is_active);
   const leaderOf = list.filter((m) => m.is_leader || m.is_vice_leader).map((m) => m.ministry_id);
   const mainLeaderOf = list.filter((m) => m.is_leader).map((m) => m.ministry_id);
 
@@ -80,6 +82,8 @@ export const getSession = cache(async (): Promise<Session | null> => {
 export async function requireSession(): Promise<Session> {
   const s = await getSession();
   if (!s) redirect("/login");
+  // Usuário inativo: encerra a sessão (route handler apaga o cookie) e avisa no login.
+  if (!s.profile.active) redirect("/auth/inativo");
   return s;
 }
 

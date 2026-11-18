@@ -33,7 +33,15 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  const { data: auth, error } = await supabase.auth.signInWithPassword(parsed.data);
+  if (!error && auth.user) {
+    // Usuário INATIVO: senha certa, mas o acesso foi desativado pelo ADM.
+    const { data: profile } = await supabase.from("profiles").select("active").eq("id", auth.user.id).single();
+    if (profile && !profile.active) {
+      await supabase.auth.signOut();
+      return { error: "Seu acesso está desativado. Fale com o administrador ou com o líder do seu ministério." };
+    }
+  }
   if (error) {
     return {
       error:

@@ -51,12 +51,28 @@ export async function updateMinistry(_p: ActionState, fd: FormData): Promise<Act
   return { ok: "Ministério atualizado." };
 }
 
-/** Ativar/desativar. Desativado some das escalas novas mas mantém histórico. */
-export async function toggleMinistryActive(id: string, active: boolean) {
+/**
+ * Ativar/desativar. Inativo some do menu/início/liderança de quem participa e não
+ * aceita escala nova (RLS), mas mantém todo o histórico. É o caminho no lugar de excluir.
+ */
+export async function toggleMinistryActive(id: string, active: boolean): Promise<ActionState> {
   await requireAdmin();
   const supabase = await createClient();
-  await supabase.from("ministries").update({ is_active: active }).eq("id", id);
+  const { error } = await supabase.from("ministries").update({ is_active: active }).eq("id", id);
+  if (error) return { error: friendlyError(error.message) };
   revalidatePath("/", "layout");
+  if (active) return { ok: "Ministério ativado." };
+
+  const { count } = await supabase
+    .from("schedules")
+    .select("id, event:events!inner(event_date)", { count: "exact", head: true })
+    .eq("ministry_id", id)
+    .gte("event.event_date", new Date().toISOString().slice(0, 10));
+  return {
+    ok: count
+      ? `Ministério desativado. Atenção: ele tem ${count} escala(s) futura(s), que continuam registradas mas saem da visão dos voluntários.`
+      : "Ministério desativado. O histórico foi mantido.",
+  };
 }
 
 /**

@@ -6,7 +6,13 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   return (
     <LoginForm
       next={typeof next === "string" ? next : undefined}
-      initialError={erro === "link-invalido" ? "Link inválido ou expirado." : undefined}
+      initialError={
+        erro === "link-invalido"
+          ? "Link inválido ou expirado."
+          : erro === "inativo"
+            ? "Seu acesso está desativado. Fale com o administrador ou com o líder do seu ministério."
+            : undefined
+      }
     />
   );
 }

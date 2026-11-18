@@ -30,8 +30,26 @@ export async function setUserActive(profileId: string, active: boolean): Promise
   const supabase = await createClient();
   const { error } = await supabase.from("profiles").update({ active }).eq("id", profileId);
   if (error) return { error: friendlyError(error.message) };
-  revalidatePath("/admin/usuarios");
-  return { ok: active ? "Usuário ativado." : "Usuário desativado." };
+  revalidatePath("/admin/usuarios", "layout");
+  if (active) return { ok: "Usuário ativado." };
+
+  // Desativou: avisa se ainda estiver em escalas futuras (o líder precisa substituir).
+  const { data: future } = await supabase
+    .from("schedules")
+    .select("id, ministry:ministries(name), event:events!inner(title, event_date)")
+    .in(
+      "ministry_member_id",
+      ((await supabase.from("ministry_members").select("id").eq("profile_id", profileId)).data ?? []).map((m) => m.id)
+    )
+    .gte("event.event_date", new Date().toISOString().slice(0, 10))
+    .neq("status", "recusado");
+  if (future?.length) {
+    const list = future
+      .map((f) => `• ${f.event.event_date.slice(8, 10)}/${f.event.event_date.slice(5, 7)} ${f.event.title} (${f.ministry?.name})`)
+      .join("\n");
+    return { ok: `Usuário desativado. Atenção: ainda está em ${future.length} escala(s) futura(s):\n${list}\nTire da escala e escale outra pessoa.` };
+  }
+  return { ok: "Usuário desativado. Ele não consegue mais entrar no app." };
 }
 
 // ---------- CRIAR USUÁRIO (ADM e LÍDER) ----------
