@@ -40,7 +40,7 @@ src/
 │  └─ actions/                   server actions por domínio: ministries, members, users
 └─ types/database.ts             tipos gerados do schema (regenerar após cada migration)
 supabase/
-├─ migrations/                   schema, RLS, triggers, RPCs (aplicadas no projeto gxbowilntkmeveejeecg)
+├─ migrations/                   schema, RLS, triggers, RPCs (aplicadas no projeto gwtohygukijsdvksgsik)
 └─ functions/send-reminders/     Edge Function de lembretes (Fase 3)
 ```
 
@@ -59,6 +59,9 @@ Fluxo: **líder/vice escala** (rascunho) → **publica** → **voluntário confi
 - Início: minhas próximas escalas + pendências por ministério (ADM vê todos).
 - Status: Rascunho (cinza) · Aguardando (amarelo) · Confirmado (verde) · Não vai (vermelho) — `components/schedules/status-badge.tsx`.
 - Código: `lib/actions/schedules.ts`, `lib/schedules/pending.ts`, `components/schedules/*`.
+
+## Projeto Supabase
+Produção: **Naza2Tech** (`gwtohygukijsdvksgsik`), região **São Paulo (sa-east-1)**, migrado em 17/11/2026 do projeto antigo `gxbowilntkmeveejeecg` (us-east-2), que ficou pausado só como plano de volta. Mesmos IDs, usuários e senhas.
 
 ## Migrations e integração GitHub ↔ Supabase
 O projeto Supabase está ligado ao GitHub (branch `main`). A integração compara os arquivos de `supabase/migrations` com o histórico do banco (`supabase_migrations.schema_migrations`) **pelo número da versão** e aplica o que faltar.

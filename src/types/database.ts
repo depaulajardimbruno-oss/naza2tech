@@ -1,9 +1,9 @@
 /**
  * Tipos do banco de dados Supabase.
  *
- * GERADO AUTOMATICAMENTE a partir do schema do projeto (ref gxbowilntkmeveejeecg).
+ * GERADO AUTOMATICAMENTE a partir do schema do projeto (ref gwtohygukijsdvksgsik).
  * Não edite à mão. Para regenerar depois de uma migration:
- *   npx supabase gen types typescript --project-id gxbowilntkmeveejeecg > src/types/database.ts
+ *   npx supabase gen types typescript --project-id gwtohygukijsdvksgsik > src/types/database.ts
  *
  * Os helpers `Tables`, `TablesInsert`, `TablesUpdate` e `Enums` são atalhos:
  *   Tables<"profiles">        -> linha da tabela profiles
