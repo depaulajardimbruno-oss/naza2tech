@@ -147,3 +147,8 @@ npm run dev                  # http://localhost:3000
   aos cargos do ministério). Cria contas novas (senha provisória baixada uma vez), só vincula quem já tem
   telefone cadastrado, não sobrescreve dados. Código: `lib/actions/import.ts`.
 - `documentos/` (planilhas e CSVs com dados pessoais) fica fora do Git.
+- **Visão geral (`ministries.sees_all`)**: membros de um ministério com essa marca (hoje só "Pastoral e Secretaria",
+  sem escala) enxergam TODOS os ministérios — equipe, cargos e escalas publicadas — somente leitura
+  (`is_member_of()` considera a marca; menu e filtro da agenda seguem `session.seesAll`). Editar continua sendo de
+  líder/vice/ADM. Para dar a visão geral a mais pessoas, basta colocá-las nesse ministério; para outro ministério
+  ter o mesmo efeito: `update ministries set sees_all = true where ...`.

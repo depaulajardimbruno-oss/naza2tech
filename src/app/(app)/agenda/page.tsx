@@ -146,7 +146,7 @@ export default async function AgendaPage({
   // Se o link já traz um ministério fora dessa lista, ele é incluído para o seletor não ficar em branco.
   const mine = new Set(session?.memberships.map((m) => m.ministry_id));
   const ministries = (allMinistries ?? []).filter(
-    (m) => session?.isAdmin || mine.has(m.id) || m.id === ministerio,
+    (m) => session?.isAdmin || session?.seesAll || mine.has(m.id) || m.id === ministerio,
   );
 
   const canDelete = (e: EventRow) =>

@@ -86,6 +86,7 @@ export type Database = {
           is_active: boolean
           name: string
           scales_enabled: boolean
+          sees_all: boolean
         }
         Insert: {
           created_at?: string
@@ -94,6 +95,7 @@ export type Database = {
           is_active?: boolean
           name: string
           scales_enabled?: boolean
+          sees_all?: boolean
         }
         Update: {
           created_at?: string
@@ -102,6 +104,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           scales_enabled?: boolean
+          sees_all?: boolean
         }
         Relationships: []
       }

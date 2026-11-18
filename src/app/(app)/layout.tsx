@@ -12,6 +12,7 @@
  */
 import { displayEmail } from "@/lib/login-id";
 import { requireSession } from "@/lib/auth/session";
+import { createClient } from "@/lib/supabase/server";
 import { AppShell, type NavItem } from "@/components/layout/app-shell";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
@@ -23,9 +24,15 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     { href: "/minha-agenda", label: "Minhas escalas", icon: "user" },
   ];
 
-  // Ministérios em que participa (visão de membro)
-  for (const m of session.memberships) {
-    nav.push({ href: `/ministerios/${m.ministry_id}`, label: m.ministry.name, icon: "church", group: "Ministérios" });
+  // Ministérios em que participa (visão de membro). Quem é de um ministério com "visão geral"
+  // (Pastoral e Secretaria) vê TODOS os ministérios ativos (somente leitura; o RLS garante).
+  let visible = session.memberships.map((m) => ({ id: m.ministry_id, name: m.ministry.name }));
+  if (session.seesAll) {
+    const { data: all } = await (await createClient()).from("ministries").select("id, name").eq("is_active", true).order("name");
+    visible = all ?? visible;
+  }
+  for (const m of visible) {
+    nav.push({ href: `/ministerios/${m.id}`, label: m.name, icon: "church", group: "Ministérios" });
   }
 
   // Ministérios que lidera (líder ou vice)
