@@ -1,6 +1,6 @@
 /**
  * Importar voluntários de um CSV para um ministério (só ADM).
- * Formato: nome;telefone;nascimento;funcoes   (funções separadas por "|")
+ * Formato: nome;telefone;nascimento;funcoes[;emergencia_nome;emergencia_telefone]   (funções separadas por "|")
  * A leitura do arquivo acontece no navegador; a gravação, em lotes, em lib/actions/import.ts.
  */
 import { createClient } from "@/lib/supabase/server";

@@ -143,7 +143,7 @@ npm run dev                  # http://localhost:3000
 - **Várias funções por pessoa**: `ministry_member_roles` (todas as funções) + `ministry_members.ministry_role_id`
   (cargo principal, sugerido ao escalar).
 - **Aniversário sem ano**: gravado com ano 1904 e `profile_details.birth_year_unknown = true` (trigger).
-- **/admin/importar** (ADM): CSV `nome;telefone;nascimento;funcoes` (funções separadas por `|`, nomes iguais
+- **/admin/importar** (ADM): CSV `nome;telefone;nascimento;funcoes[;emergencia_nome;emergencia_telefone]` (funções separadas por `|`, nomes iguais
   aos cargos do ministério). Cria contas novas (senha provisória baixada uma vez), só vincula quem já tem
   telefone cadastrado, não sobrescreve dados. Código: `lib/actions/import.ts`.
 - `documentos/` (planilhas e CSVs com dados pessoais) fica fora do Git.

@@ -2,7 +2,7 @@
 /**
  * IMPORTAR VOLUNTÁRIOS (só ADM) — a partir de um CSV (ver /admin/importar).
  *
- * Por linha (nome;telefone;nascimento;funcoes):
+ * Por linha (nome;telefone;nascimento;funcoes;emergencia_nome;emergencia_telefone):
  *   - pessoa JÁ existe (mesmo telefone em profiles)  -> só vincula ao ministério/funções;
  *   - pessoa nova -> cria a conta (e-mail sintético do telefone, senha provisória gerada
  *     aqui e devolvida UMA vez para o ADM baixar; nada é guardado em texto puro);
@@ -16,7 +16,15 @@ import { phoneBR } from "@/lib/phone";
 import { phoneToLoginEmail } from "@/lib/login-id";
 import { generateStrongPassword } from "@/lib/password";
 
-export type ImportRow = { nome: string; telefone: string; nascimento: string; funcoes: string };
+export type ImportRow = {
+  nome: string;
+  telefone: string;
+  nascimento: string;
+  funcoes: string;
+  /** Opcionais: contato de emergência (ex.: "Mãe" + telefone). Não sobrescreve o que já existe. */
+  emergencia_nome?: string;
+  emergencia_telefone?: string;
+};
 export type ImportResult = {
   nome: string;
   status: "criado" | "vinculado" | "erro";
@@ -87,6 +95,25 @@ export async function importVolunteers(ministryId: string, rows: ImportRow[]): P
       if (birth) {
         const { data: det } = await admin.from("profile_details").select("birth_date").eq("profile_id", profileId).maybeSingle();
         if (!det?.birth_date) await admin.from("profile_details").upsert({ profile_id: profileId, birth_date: birth });
+      }
+
+      // ---- contato de emergência (não sobrescreve) ----
+      if (row.emergencia_nome?.trim() || row.emergencia_telefone?.trim()) {
+        const emTel = phoneBR.safeParse(row.emergencia_telefone ?? "");
+        if (!emTel.success) avisos.push("Telefone de emergência inválido — ignorado.");
+        else {
+          const { data: det } = await admin
+            .from("profile_details")
+            .select("emergency_name, emergency_phone")
+            .eq("profile_id", profileId)
+            .maybeSingle();
+          if (!det?.emergency_name && !det?.emergency_phone)
+            await admin.from("profile_details").upsert({
+              profile_id: profileId,
+              emergency_name: row.emergencia_nome?.trim() || null,
+              emergency_phone: emTel.data,
+            });
+        }
       }
 
       // ---- ministério + funções ----

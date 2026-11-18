@@ -33,10 +33,18 @@ function parseCsv(text: string): ImportRow[] {
   const head = split(lines[0]).map((h) => h.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""));
   const idx = (k: string) => head.findIndex((h) => h.startsWith(k));
   const [iN, iT, iB, iF] = [idx("nome"), idx("telefone"), idx("nasc"), idx("funcoes")];
+  const [iEN, iET] = [idx("emergencia_nome"), idx("emergencia_tel")];
   if (iN < 0 || iT < 0) return [];
   return lines.slice(1).map((l) => {
     const c = split(l);
-    return { nome: c[iN] ?? "", telefone: c[iT] ?? "", nascimento: iB >= 0 ? (c[iB] ?? "") : "", funcoes: iF >= 0 ? (c[iF] ?? "") : "" };
+    return {
+      nome: c[iN] ?? "",
+      telefone: c[iT] ?? "",
+      nascimento: iB >= 0 ? (c[iB] ?? "") : "",
+      funcoes: iF >= 0 ? (c[iF] ?? "") : "",
+      emergencia_nome: iEN >= 0 ? (c[iEN] ?? "") : "",
+      emergencia_telefone: iET >= 0 ? (c[iET] ?? "") : "",
+    };
   });
 }
 
@@ -50,7 +58,7 @@ export function ImportVolunteers({ ministries }: { ministries: { id: string; nam
     setResults([]);
     if (!file) return setRows([]);
     const parsed = parseCsv(await file.text());
-    if (!parsed.length) toast.error("Não consegui ler o arquivo. Use o formato nome;telefone;nascimento;funcoes.");
+    if (!parsed.length) toast.error("Não consegui ler o arquivo. Use o formato nome;telefone;nascimento;funcoes;emergencia_nome;emergencia_telefone.");
     setRows(parsed);
   }
 
