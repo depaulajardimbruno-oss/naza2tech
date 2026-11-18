@@ -16,7 +16,7 @@ export default async function MinisterioPage({ params }: PageProps<"/ministerios
 
   const { data: members } = await supabase
     .from("ministry_members")
-    .select("id, is_leader, is_vice_leader, profile:profiles(full_name), role:ministry_roles(name)")
+    .select("id, is_leader, is_vice_leader, profile:profiles(full_name), role:ministry_roles!ministry_members_ministry_role_id_ministry_id_fkey(name)")
     .eq("ministry_id", id)
     .order("is_leader", { ascending: false });
 

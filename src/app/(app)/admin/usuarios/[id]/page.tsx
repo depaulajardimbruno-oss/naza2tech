@@ -35,7 +35,7 @@ export default async function UserDetailPage({ params }: PageProps<"/admin/usuar
     supabase.from("profile_details").select("*").eq("profile_id", id).maybeSingle(),
     supabase
       .from("ministry_members")
-      .select("id, ministry_id, is_leader, is_vice_leader, ministry:ministries(name), role:ministry_roles(name)")
+      .select("id, ministry_id, is_leader, is_vice_leader, ministry:ministries(name), role:ministry_roles!ministry_members_ministry_role_id_ministry_id_fkey(name)")
       .eq("profile_id", id),
     supabase.from("ministries").select("id, name").eq("is_active", true).order("name"),
   ]);

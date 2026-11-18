@@ -54,7 +54,7 @@ export const getSession = cache(async (): Promise<Session | null> => {
     supabase
       .from("ministry_members")
       .select(
-        "id, ministry_id, is_leader, is_vice_leader, ministry:ministries(id, name, is_active), role:ministry_roles(id, name)"
+        "id, ministry_id, is_leader, is_vice_leader, ministry:ministries(id, name, is_active), role:ministry_roles!ministry_members_ministry_role_id_ministry_id_fkey(id, name)"
       )
       .eq("profile_id", user.id),
   ]);
