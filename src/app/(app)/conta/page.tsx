@@ -2,6 +2,7 @@
  * Minha conta: a própria pessoa completa o cadastro (mesmo formulário do ADM)
  * e troca a senha. E-mail de login só o ADM altera (regra no banco).
  */
+import { displayEmail } from "@/lib/login-id";
 import { requireSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { saveMyPerson } from "@/lib/actions/people";
@@ -18,7 +19,7 @@ export default async function ContaPage() {
     <>
       <PageHeader
         title="Minha conta"
-        description={`Você entra com ${s.email ?? "seu e-mail"}. Para trocar o e-mail, fale com o administrador.`}
+        description={`Você entra com ${displayEmail(s.email) ?? s.profile.phone ?? "seu telefone"}. Para trocar o e-mail ou o telefone de acesso, fale com o administrador.`}
       />
       <div className="grid gap-6 xl:grid-cols-[1fr_22rem]">
         <PersonForm person={{ ...s.profile, ...(details ?? {}) }} action={saveMyPerson} />

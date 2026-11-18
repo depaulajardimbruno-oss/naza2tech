@@ -6,6 +6,7 @@ import { requireAdmin, requireSession } from "@/lib/auth/session";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { phoneBR } from "@/lib/phone";
+import { phoneToLoginEmail } from "@/lib/login-id";
 import { generateStrongPassword } from "@/lib/password";
 import { friendlyError, type ActionState } from "./types";
 import { blockersMessage } from "./blockers";
@@ -70,7 +71,9 @@ export async function setUserActive(profileId: string, active: boolean): Promise
  */
 const newUserSchema = z.object({
   full_name: z.string().trim().min(2, "Informe o nome").max(100),
-  email: z.string().trim().toLowerCase().email("E-mail inválido"),
+  // E-mail OU telefone (um dos dois é obrigatório). Sem e-mail, o login usa um e-mail
+  // sintético derivado do telefone (lib/login-id.ts).
+  email: z.string().trim().toLowerCase().email("E-mail inválido").or(z.literal("")).default(""),
   phone: phoneBR,
   ministries: z.array(z.string().uuid()).default([]),
   leader_of: z.array(z.string().uuid()).default([]),
@@ -78,7 +81,7 @@ const newUserSchema = z.object({
   is_admin: z.boolean().default(false),
 });
 
-export type CreateUserState = ActionState & { password?: string; email?: string };
+export type CreateUserState = ActionState & { password?: string; email?: string; phone?: string };
 
 
 export async function createUser(_p: CreateUserState, fd: FormData): Promise<CreateUserState> {
@@ -99,6 +102,8 @@ export async function createUser(_p: CreateUserState, fd: FormData): Promise<Cre
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const d = parsed.data;
+  if (!d.email && !d.phone) return { error: "Informe o telefone ou o e-mail da pessoa." };
+  const loginEmail = d.email || phoneToLoginEmail(d.phone!); // e-mail real ou sintético
 
   // ---- Permissões ----
   if (!session.isAdmin) {
@@ -114,14 +119,14 @@ export async function createUser(_p: CreateUserState, fd: FormData): Promise<Cre
   const memberOf = [...new Set([...d.ministries, ...d.leader_of, ...d.vice_of])]; // líder/vice também são membros
 
   // ---- Conta: existente ou nova ----
-  const { data: existing } = await admin.from("profiles").select("id").eq("email", d.email).maybeSingle();
+  const { data: existing } = await admin.from("profiles").select("id").eq("email", loginEmail).maybeSingle();
   let profileId = existing?.id;
   let password: string | undefined;
 
   if (!profileId) {
     password = generateStrongPassword(); // cumpre a política (lib/password.ts)
     const { data, error } = await admin.auth.admin.createUser({
-      email: d.email,
+      email: loginEmail,
       password,
       email_confirm: true,
       user_metadata: { full_name: d.full_name, phone: d.phone },
@@ -157,13 +162,13 @@ export async function createUser(_p: CreateUserState, fd: FormData): Promise<Cre
         .eq("is_leader", false)
         .in("ministry_id", d.vice_of);
     }
-    if (mErr) return { error: `Falhou ao vincular ministérios: ${friendlyError(mErr.message)}`, password, email: d.email };
+    if (mErr) return { error: `Falhou ao vincular ministérios: ${friendlyError(mErr.message)}`, password, email: d.email || undefined, phone: d.phone ?? undefined };
   }
 
   revalidatePath("/admin/usuarios");
   revalidatePath("/", "layout");
   if (!password) return { ok: "Essa pessoa já tinha conta: foi vinculada ao(s) ministério(s) marcado(s)." };
-  return { ok: "Usuário criado.", password, email: d.email };
+  return { ok: "Usuário criado.", password, email: d.email || undefined, phone: d.phone ?? undefined };
 }
 
 /**

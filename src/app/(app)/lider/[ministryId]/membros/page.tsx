@@ -39,7 +39,7 @@ export default async function LeaderMembersPage({
     supabase
       .from("ministry_members")
       .select(
-        "id, is_leader, is_vice_leader, ministry_role_id, profile:profiles(id, full_name, email, phone)",
+        "id, is_leader, is_vice_leader, ministry_role_id, profile:profiles(id, full_name, email, phone), areas:ministry_member_roles(role:ministry_roles(name))",
       )
       .eq("ministry_id", ministryId)
       .order("is_leader", { ascending: false })

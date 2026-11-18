@@ -104,7 +104,7 @@ function NewUserForm({
   );
 
   const message = state.password
-    ? `Olá! Sua conta no app de escalas da Naza2 foi criada.\nAcesse: ${APP_URL}/login\nE-mail: ${state.email}\nSenha provisória: ${state.password}\nDepois de entrar, troque a senha em Conta.`
+    ? `Olá! Sua conta no app de escalas da Naza2 foi criada.\nAcesse: ${APP_URL}/login\n${state.email ? `E-mail: ${state.email}` : `Telefone: ${state.phone}`}\nSenha provisória: ${state.password}\nDepois de entrar, troque a senha em Conta.`
     : "";
 
   return done ? (
@@ -112,7 +112,7 @@ function NewUserForm({
       {state.password ? (
         <>
           <p className="text-sm">
-            Conta de <strong>{state.email}</strong> criada. Esta senha só
+            Conta de <strong>{state.email ?? state.phone}</strong> criada. Esta senha só
             aparece agora:
           </p>
           <p className="rounded-lg border bg-white/5 p-3 text-center font-mono text-lg tracking-wider">
@@ -147,11 +147,11 @@ function NewUserForm({
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="email">E-mail</Label>
-          <Input id="email" name="email" type="email" required />
+          <Label htmlFor="email">E-mail (opcional se tiver telefone)</Label>
+          <Input id="email" name="email" type="email" />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="phone">WhatsApp (opcional)</Label>
+          <Label htmlFor="phone">Telefone / WhatsApp (chave de acesso se não tiver e-mail)</Label>
           <PhoneInput id="phone" name="phone" />
         </div>
       </div>

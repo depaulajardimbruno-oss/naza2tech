@@ -48,3 +48,6 @@ supabase/.branches
 setup.cmd
 sincronizar.cmd
 setup.log
+
+# dados pessoais (planilhas, CSVs de importação, senhas provisórias): nunca versionar
+documentos/

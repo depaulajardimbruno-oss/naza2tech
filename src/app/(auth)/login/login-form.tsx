@@ -20,8 +20,15 @@ export function LoginForm({ next, initialError }: { next?: string; initialError?
         <form action={action} className="space-y-4">
           {next && <input type="hidden" name="next" value={next} />}
           <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
-            <Input id="email" name="email" type="email" autoComplete="email" required />
+            <Label htmlFor="login">Telefone ou e-mail</Label>
+            <Input
+              id="login"
+              name="login"
+              inputMode="email"
+              autoComplete="username"
+              placeholder="(19) 99999-9999 ou nome@email.com"
+              required
+            />
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">

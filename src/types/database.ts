@@ -1,9 +1,9 @@
 /**
  * Tipos do banco de dados Supabase.
  *
- * GERADO AUTOMATICAMENTE a partir do schema do projeto (ref gxbowilntkmeveejeecg).
+ * GERADO AUTOMATICAMENTE a partir do schema do projeto (ref gwtohygukijsdvksgsik).
  * Não edite à mão. Para regenerar depois de uma migration:
- *   npx supabase gen types typescript --project-id gxbowilntkmeveejeecg > src/types/database.ts
+ *   npx supabase gen types typescript --project-id gwtohygukijsdvksgsik > src/types/database.ts
  *
  * Os helpers `Tables`, `TablesInsert`, `TablesUpdate` e `Enums` são atalhos:
  *   Tables<"profiles">        -> linha da tabela profiles
@@ -86,6 +86,7 @@ export type Database = {
           is_active: boolean
           name: string
           scales_enabled: boolean
+          sees_all: boolean
         }
         Insert: {
           created_at?: string
@@ -94,6 +95,7 @@ export type Database = {
           is_active?: boolean
           name: string
           scales_enabled?: boolean
+          sees_all?: boolean
         }
         Update: {
           created_at?: string
@@ -102,6 +104,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           scales_enabled?: boolean
+          sees_all?: boolean
         }
         Relationships: []
       }
@@ -153,6 +156,39 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ministry_member_roles: {
+        Row: {
+          created_at: string
+          ministry_member_id: string
+          ministry_role_id: string
+        }
+        Insert: {
+          created_at?: string
+          ministry_member_id: string
+          ministry_role_id: string
+        }
+        Update: {
+          created_at?: string
+          ministry_member_id?: string
+          ministry_role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ministry_member_roles_ministry_member_id_fkey"
+            columns: ["ministry_member_id"]
+            isOneToOne: false
+            referencedRelation: "ministry_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ministry_member_roles_ministry_role_id_fkey"
+            columns: ["ministry_role_id"]
+            isOneToOne: false
+            referencedRelation: "ministry_roles"
             referencedColumns: ["id"]
           },
         ]
@@ -236,6 +272,7 @@ export type Database = {
           baptism_date: string | null
           baptized: boolean | null
           birth_date: string | null
+          birth_year_unknown: boolean
           emergency_name: string | null
           emergency_phone: string | null
           gender: string | null
@@ -255,6 +292,7 @@ export type Database = {
           baptism_date?: string | null
           baptized?: boolean | null
           birth_date?: string | null
+          birth_year_unknown?: boolean
           emergency_name?: string | null
           emergency_phone?: string | null
           gender?: string | null
@@ -274,6 +312,7 @@ export type Database = {
           baptism_date?: string | null
           baptized?: boolean | null
           birth_date?: string | null
+          birth_year_unknown?: boolean
           emergency_name?: string | null
           emergency_phone?: string | null
           gender?: string | null
@@ -407,6 +446,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      upcoming_birthdays: {
+        Args: { p_days?: number }
+        Returns: { profile_id: string; name: string; day: number; month: number; days_until: number }[]
+      }
       admin_user_sign_ins: {
         Args: never
         Returns: { created_at: string; id: string; last_sign_in_at: string | null }[]

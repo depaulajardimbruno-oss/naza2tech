@@ -26,7 +26,7 @@ export default async function MinistryDetailPage({ params }: PageProps<"/admin/m
     supabase.from("ministry_roles").select("id, name").eq("ministry_id", id).order("name"),
     supabase
       .from("ministry_members")
-      .select("id, is_leader, is_vice_leader, ministry_role_id, profile:profiles(id, full_name, email, phone)")
+      .select("id, is_leader, is_vice_leader, ministry_role_id, profile:profiles(id, full_name, email, phone), areas:ministry_member_roles(role:ministry_roles(name))")
       .eq("ministry_id", id)
       .order("is_leader", { ascending: false })
       .order("is_vice_leader", { ascending: false }),

@@ -20,12 +20,15 @@ const APP_URL = "https://naza2tech.vercel.app";
 export function AccessCard({
   profileId,
   email,
+  phone,
   name,
   enabled,
   children,
 }: {
   profileId: string;
   email: string;
+  /** Telefone: é a chave de acesso de quem ainda não tem e-mail. */
+  phone: string;
   name: string;
   enabled: boolean;
   children?: React.ReactNode;
@@ -44,7 +47,7 @@ export function AccessCard({
   }
 
   const message = password
-    ? `Olá! Sua senha do app de escalas da Naza2 foi redefinida.\nAcesse: ${APP_URL}/login\nE-mail: ${email}\nSenha provisória: ${password}\nDepois de entrar, troque a senha em Conta.`
+    ? `Olá! Sua senha do app de escalas da Naza2 foi redefinida.\nAcesse: ${APP_URL}/login\n${email ? `E-mail: ${email}` : `Telefone: ${phone}`}\nSenha provisória: ${password}\nDepois de entrar, troque a senha em Conta.`
     : "";
 
   return (
@@ -56,9 +59,17 @@ export function AccessCard({
       <CardContent className="space-y-6">
         <form action={emailAction} className="space-y-2">
           <input type="hidden" name="profile_id" value={profileId} />
-          <Label htmlFor="email">E-mail de login</Label>
+          <Label htmlFor="email">E-mail de login (opcional se tiver telefone)</Label>
           <div className="flex gap-2">
-            <Input id="email" name="email" type="email" defaultValue={email} required disabled={!enabled} />
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              defaultValue={email}
+              placeholder={email ? undefined : "Sem e-mail — entra pelo telefone"}
+              required
+              disabled={!enabled}
+            />
             <SubmitButton variant="outline" disabled={!enabled}>
               Alterar
             </SubmitButton>

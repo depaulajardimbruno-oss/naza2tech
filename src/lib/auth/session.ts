@@ -24,7 +24,7 @@ export type Membership = {
   is_leader: boolean;
   /** Vice-líder: mesmas permissões do líder no ministério, exceto nomear vice. */
   is_vice_leader: boolean;
-  ministry: Pick<Tables<"ministries">, "id" | "name" | "is_active">;
+  ministry: Pick<Tables<"ministries">, "id" | "name" | "is_active" | "sees_all">;
   role: Pick<Tables<"ministry_roles">, "id" | "name"> | null;
 };
 
@@ -39,6 +39,8 @@ export type Session = {
   /** Só onde é líder TITULAR (pode nomear vice). */
   mainLeaderOf: string[];
   memberships: Membership[];
+  /** Membro de um ministério com "visão geral" (ex.: Pastoral e Secretaria): vê todos os ministérios, só leitura. */
+  seesAll: boolean;
 };
 
 /** `cache()` evita repetir as queries quando layout e page chamam na mesma requisição. */
@@ -54,7 +56,7 @@ export const getSession = cache(async (): Promise<Session | null> => {
     supabase
       .from("ministry_members")
       .select(
-        "id, ministry_id, is_leader, is_vice_leader, ministry:ministries(id, name, is_active), role:ministry_roles!ministry_members_ministry_role_id_ministry_id_fkey(id, name)"
+        "id, ministry_id, is_leader, is_vice_leader, ministry:ministries(id, name, is_active, sees_all), role:ministry_roles!ministry_members_ministry_role_id_ministry_id_fkey(id, name)"
       )
       .eq("profile_id", user.id),
   ]);
@@ -76,6 +78,7 @@ export const getSession = cache(async (): Promise<Session | null> => {
     leaderOf,
     mainLeaderOf,
     memberships: list,
+    seesAll: list.some((m) => m.ministry.sees_all),
   };
 });
 

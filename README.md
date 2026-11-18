@@ -40,7 +40,7 @@ src/
 │  └─ actions/                   server actions por domínio: ministries, members, users
 └─ types/database.ts             tipos gerados do schema (regenerar após cada migration)
 supabase/
-├─ migrations/                   schema, RLS, triggers, RPCs (aplicadas no projeto gxbowilntkmeveejeecg)
+├─ migrations/                   schema, RLS, triggers, RPCs (aplicadas no projeto gwtohygukijsdvksgsik)
 └─ functions/send-reminders/     Edge Function de lembretes (Fase 3)
 ```
 
@@ -59,6 +59,9 @@ Fluxo: **líder/vice escala** (rascunho) → **publica** → **voluntário confi
 - Início: minhas próximas escalas + pendências por ministério (ADM vê todos).
 - Status: Rascunho (cinza) · Aguardando (amarelo) · Confirmado (verde) · Não vai (vermelho) — `components/schedules/status-badge.tsx`.
 - Código: `lib/actions/schedules.ts`, `lib/schedules/pending.ts`, `components/schedules/*`.
+
+## Projeto Supabase
+Produção: **Naza2Tech** (`gwtohygukijsdvksgsik`), região **São Paulo (sa-east-1)**, migrado em 17/11/2026 do projeto antigo `gxbowilntkmeveejeecg` (us-east-2), que ficou pausado só como plano de volta. Mesmos IDs, usuários e senhas.
 
 ## Migrations e integração GitHub ↔ Supabase
 O projeto Supabase está ligado ao GitHub (branch `main`). A integração compara os arquivos de `supabase/migrations` com o histórico do banco (`supabase_migrations.schema_migrations`) **pelo número da versão** e aplica o que faltar.
@@ -127,3 +130,30 @@ npm run dev                  # http://localhost:3000
 1. ✅ Auth + cadastros base (ministérios, cargos, usuários, membros, líderes)
 2. Eventos, escalas, conflitos, confirmação/recusa, dashboards
 3. Lembretes (Edge Function + pg_cron), provider WhatsApp/e-mail, PWA
+
+## Login por telefone e importação de voluntários
+
+- **Chave de acesso = telefone OU e-mail** (`src/lib/login-id.ts`). O Supabase Auth só entende e-mail, então
+  quem não tem e-mail é criado com um e-mail *sintético* `DDNNNNNNNNN@telefone.naza2.invalid` (domínio
+  reservado, nunca recebe mensagem; a tela esconde com `displayEmail()`). No login (`lib/auth/actions.ts`)
+  o app acha o perfil pelo telefone e entra com o e-mail cadastrado — por isso, quando o ADM trocar o
+  e-mail sintético por um real (`/admin/usuarios/[id]`), o telefone continua funcionando.
+  Telefone repetido entre pessoas (família): o login por telefone pede para usar e-mail.
+  "Esqueci a senha" só funciona para quem tem e-mail real; para os demais, o ADM redefine a senha.
+- **Várias funções por pessoa**: `ministry_member_roles` (todas as funções) + `ministry_members.ministry_role_id`
+  (cargo principal, sugerido ao escalar).
+- **Aniversário sem ano**: gravado com ano 1904 e `profile_details.birth_year_unknown = true` (trigger).
+- **/admin/importar** (ADM): CSV `nome;telefone;nascimento;funcoes[;emergencia_nome;emergencia_telefone]` (funções separadas por `|`, nomes iguais
+  aos cargos do ministério). Cria contas novas (senha provisória baixada uma vez), só vincula quem já tem
+  telefone cadastrado, não sobrescreve dados. Código: `lib/actions/import.ts`.
+- `documentos/` (planilhas e CSVs com dados pessoais) fica fora do Git.
+- **Visão geral (`ministries.sees_all`)**: membros de um ministério com essa marca (hoje só "Pastoral e Secretaria",
+  sem escala) enxergam TODOS os ministérios — equipe, cargos e escalas publicadas — somente leitura
+  (`is_member_of()` considera a marca; menu e filtro da agenda seguem `session.seesAll`). Editar continua sendo de
+  líder/vice/ADM. Para dar a visão geral a mais pessoas, basta colocá-las nesse ministério; para outro ministério
+  ter o mesmo efeito: `update ministries set sees_all = true where ...`.
+- **Usuários**: busca (nome/telefone/e-mail, sem acento) + filtro de ministério ("Sem ministério" inclusive) e situação, via URL (`components/users/user-filters.tsx`).
+- **Aniversários**: `upcoming_birthdays(dias)` (migration `aniversariantes`) devolve só nome + dia/mês a quem é membro ou ADM
+  (`profile_details` continua privado); o Início mostra faixa "hoje" e os próximos 30 dias. Lembrete por WhatsApp = Fase 3.
+- **Escalas de novembro/2026 da Mídia** foram importadas direto no banco a partir das imagens (Chat, Fotografia, Projeção):
+  passadas (antes de 18/11) = publicadas e confirmadas; de hoje em diante = rascunho/pendente para o líder revisar e publicar.
