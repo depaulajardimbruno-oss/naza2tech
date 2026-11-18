@@ -3,6 +3,7 @@
  * marcar vice-líder (ADM ou líder titular), remover (ADM ou líder titular).
  * Server Component: os controles interativos são client components pequenos.
  */
+import { displayEmail } from "@/lib/login-id";
 import { Trash2Icon } from "lucide-react";
 import {
   setMemberRole,
@@ -27,6 +28,8 @@ type Member = {
   is_leader: boolean;
   is_vice_leader: boolean;
   ministry_role_id: string | null;
+  /** Todas as funções que a pessoa faz (ministry_member_roles). */
+  areas?: { role: { name: string } | null }[];
   profile: {
     id: string;
     full_name: string;
@@ -73,8 +76,13 @@ export function MembersTable({
             <TableCell>
               <p className="font-medium">{m.profile?.full_name}</p>
               <p className="text-xs text-muted-foreground">
-                {m.profile?.phone ?? m.profile?.email}
+                {m.profile?.phone ?? displayEmail(m.profile?.email)}
               </p>
+              {!!m.areas?.length && (
+                <p className="text-xs text-muted-foreground">
+                  Faz: {m.areas.map((a) => a.role?.name).filter(Boolean).join(", ")}
+                </p>
+              )}
             </TableCell>
             <TableCell>
               <ActionSelect

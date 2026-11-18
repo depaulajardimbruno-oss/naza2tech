@@ -130,3 +130,20 @@ npm run dev                  # http://localhost:3000
 1. ✅ Auth + cadastros base (ministérios, cargos, usuários, membros, líderes)
 2. Eventos, escalas, conflitos, confirmação/recusa, dashboards
 3. Lembretes (Edge Function + pg_cron), provider WhatsApp/e-mail, PWA
+
+## Login por telefone e importação de voluntários
+
+- **Chave de acesso = telefone OU e-mail** (`src/lib/login-id.ts`). O Supabase Auth só entende e-mail, então
+  quem não tem e-mail é criado com um e-mail *sintético* `DDNNNNNNNNN@telefone.naza2.invalid` (domínio
+  reservado, nunca recebe mensagem; a tela esconde com `displayEmail()`). No login (`lib/auth/actions.ts`)
+  o app acha o perfil pelo telefone e entra com o e-mail cadastrado — por isso, quando o ADM trocar o
+  e-mail sintético por um real (`/admin/usuarios/[id]`), o telefone continua funcionando.
+  Telefone repetido entre pessoas (família): o login por telefone pede para usar e-mail.
+  "Esqueci a senha" só funciona para quem tem e-mail real; para os demais, o ADM redefine a senha.
+- **Várias funções por pessoa**: `ministry_member_roles` (todas as funções) + `ministry_members.ministry_role_id`
+  (cargo principal, sugerido ao escalar).
+- **Aniversário sem ano**: gravado com ano 1904 e `profile_details.birth_year_unknown = true` (trigger).
+- **/admin/importar** (ADM): CSV `nome;telefone;nascimento;funcoes` (funções separadas por `|`, nomes iguais
+  aos cargos do ministério). Cria contas novas (senha provisória baixada uma vez), só vincula quem já tem
+  telefone cadastrado, não sobrescreve dados. Código: `lib/actions/import.ts`.
+- `documentos/` (planilhas e CSVs com dados pessoais) fica fora do Git.

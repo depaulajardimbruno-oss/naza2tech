@@ -1,5 +1,6 @@
 /** Usuários: lista, criar conta (inclusive líder e ADM), promover a ADM, ativar/desativar.
  *  Clicar no nome abre a ficha completa (/admin/usuarios/[id]). */
+import { displayEmail } from "@/lib/login-id";
 import Link from "next/link";
 import { dateTimeBR, lastSeen } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -10,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ActionSwitch } from "@/components/forms/action-switch";
 import { Badge } from "@/components/ui/badge";
 import { adminClientConfigured, adminKeyStatus } from "@/lib/supabase/admin";
+import { buttonVariants } from "@/components/ui/button";
 import { NewUserDialog } from "@/components/users/new-user-dialog";
 
 export default async function UsuariosPage() {
@@ -31,6 +33,9 @@ export default async function UsuariosPage() {
         title="Usuários"
         description="Clique no nome para abrir a ficha completa: dados, e-mail, senha e ministérios."
       >
+        <Link href="/admin/importar" className={buttonVariants({ variant: "outline" })}>
+          Importar planilha
+        </Link>
         <NewUserDialog ministries={ministries ?? []} canSetRoles enabled={canCreate} />
       </PageHeader>
       {!canCreate && (
@@ -59,7 +64,7 @@ export default async function UsuariosPage() {
                 {u.id === s.userId && <Badge variant="outline">você</Badge>}
               </TableCell>
               <TableCell className="text-muted-foreground">
-                {u.email}
+                {displayEmail(u.email)}
                 {u.phone && <span className="block text-xs">{u.phone}</span>}
               </TableCell>
               <TableCell className="text-muted-foreground">

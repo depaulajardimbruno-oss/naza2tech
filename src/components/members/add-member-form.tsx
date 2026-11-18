@@ -1,5 +1,6 @@
 "use client";
 /** Adiciona uma pessoa já cadastrada ao ministério, com cargo opcional. Usado por ADM e líder. */
+import { displayEmail } from "@/lib/login-id";
 import { useActionState, useEffect, useRef } from "react";
 import { UserPlusIcon } from "lucide-react";
 import { addMember } from "@/lib/actions/members";
@@ -34,7 +35,7 @@ export function AddMemberForm({
             </option>
             {people.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.full_name} {p.email ? `(${p.email})` : ""}
+                {p.full_name} {displayEmail(p.email) ? `(${displayEmail(p.email)})` : ""}
               </option>
             ))}
           </NativeSelect>

@@ -16,24 +16,51 @@ import { z } from "zod";
 import { phoneBR } from "@/lib/phone";
 import { passwordSchema } from "@/lib/password";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { parseLoginId, phoneToLoginEmail } from "@/lib/login-id";
 
 export type AuthState = { error?: string; ok?: string };
 
 // Login não aplica a política nova (contas antigas continuam entrando).
+// A "chave de acesso" é telefone OU e-mail (lib/login-id.ts).
 const loginSchema = z.object({
-  email: z.string().email("E-mail inválido"),
+  login: z.string().trim().min(1, "Informe seu telefone ou e-mail"),
   password: z.string().min(1, "Informe a senha"),
 });
 
+/**
+ * Descobre o e-mail da conta a partir do que foi digitado.
+ * Telefone: procura o perfil pelo telefone (service key, só no servidor) e usa o e-mail
+ * que estiver cadastrado — real ou sintético. Se mais de uma pessoa usa o mesmo número
+ * (ex.: família), pede para entrar com e-mail.
+ */
+async function resolveLoginEmail(raw: string): Promise<{ email: string } | { error: string }> {
+  const id = parseLoginId(raw);
+  if (!id) return { error: "Informe um e-mail ou um telefone com DDD, ex.: (19) 99999-9999" };
+  if (id.kind === "email") return { email: id.email };
+
+  const admin = createAdminClient();
+  if (!admin) return { email: phoneToLoginEmail(id.phone) };
+  const { data } = await admin.from("profiles").select("email").eq("phone", id.phone);
+  if (!data?.length) return { email: phoneToLoginEmail(id.phone) }; // falha no signIn com a mensagem padrão
+  if (data.length > 1) return { error: "Esse telefone é usado por mais de uma pessoa. Entre com o seu e-mail." };
+  return { email: data[0].email ?? phoneToLoginEmail(id.phone) };
+}
+
 export async function signIn(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const parsed = loginSchema.safeParse({
-    email: formData.get("email"),
+    login: formData.get("login"),
     password: formData.get("password"),
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const resolved = await resolveLoginEmail(parsed.data.login);
+  if ("error" in resolved) return resolved;
 
   const supabase = await createClient();
-  const { data: auth, error } = await supabase.auth.signInWithPassword(parsed.data);
+  const { data: auth, error } = await supabase.auth.signInWithPassword({
+    email: resolved.email,
+    password: parsed.data.password,
+  });
   if (!error && auth.user) {
     // Usuário INATIVO: senha certa, mas o acesso foi desativado pelo ADM.
     const { data: profile } = await supabase.from("profiles").select("active").eq("id", auth.user.id).single();
@@ -46,7 +73,7 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
     return {
       error:
         error.message === "Invalid login credentials"
-          ? "E-mail ou senha incorretos"
+          ? "Telefone/e-mail ou senha incorretos"
           : error.message === "Email not confirmed"
             ? "Confirme seu e-mail antes de entrar"
             : error.message,

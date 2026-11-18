@@ -4,6 +4,7 @@
  *  - Ministérios: vínculos, líder/vice, adicionar e remover
  *  - Cadastro completo: dados pessoais, contato, endereço, igreja (components/people/person-form.tsx)
  */
+import { displayEmail } from "@/lib/login-id";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeftIcon, Trash2Icon } from "lucide-react";
@@ -73,7 +74,8 @@ export default async function UserDetailPage({ params }: PageProps<"/admin/usuar
         <div className="order-1 space-y-6 xl:order-2">
           <AccessCard
             profileId={profile.id}
-            email={profile.email ?? ""}
+            email={displayEmail(profile.email) ?? ""}
+            phone={profile.phone ?? ""}
             name={profile.full_name}
             enabled={adminClientConfigured()}
           >

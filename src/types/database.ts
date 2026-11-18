@@ -157,6 +157,39 @@ export type Database = {
           },
         ]
       }
+      ministry_member_roles: {
+        Row: {
+          created_at: string
+          ministry_member_id: string
+          ministry_role_id: string
+        }
+        Insert: {
+          created_at?: string
+          ministry_member_id: string
+          ministry_role_id: string
+        }
+        Update: {
+          created_at?: string
+          ministry_member_id?: string
+          ministry_role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ministry_member_roles_ministry_member_id_fkey"
+            columns: ["ministry_member_id"]
+            isOneToOne: false
+            referencedRelation: "ministry_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ministry_member_roles_ministry_role_id_fkey"
+            columns: ["ministry_role_id"]
+            isOneToOne: false
+            referencedRelation: "ministry_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ministry_roles: {
         Row: {
           created_at: string
@@ -236,6 +269,7 @@ export type Database = {
           baptism_date: string | null
           baptized: boolean | null
           birth_date: string | null
+          birth_year_unknown: boolean
           emergency_name: string | null
           emergency_phone: string | null
           gender: string | null
@@ -255,6 +289,7 @@ export type Database = {
           baptism_date?: string | null
           baptized?: boolean | null
           birth_date?: string | null
+          birth_year_unknown?: boolean
           emergency_name?: string | null
           emergency_phone?: string | null
           gender?: string | null
@@ -274,6 +309,7 @@ export type Database = {
           baptism_date?: string | null
           baptized?: boolean | null
           birth_date?: string | null
+          birth_year_unknown?: boolean
           emergency_name?: string | null
           emergency_phone?: string | null
           gender?: string | null

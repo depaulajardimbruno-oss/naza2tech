@@ -10,6 +10,7 @@
  *
  * O menu é UX. A segurança de verdade está no RLS e nos `require*()` de cada página.
  */
+import { displayEmail } from "@/lib/login-id";
 import { requireSession } from "@/lib/auth/session";
 import { AppShell, type NavItem } from "@/components/layout/app-shell";
 
@@ -44,7 +45,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   nav.push({ href: "/conta", label: "Conta", icon: "user", group: "Você" });
 
   return (
-    <AppShell nav={nav} userName={session.profile.full_name || session.email || "Usuário"}>
+    <AppShell nav={nav} userName={session.profile.full_name || displayEmail(session.email) || "Usuário"}>
       {children}
     </AppShell>
   );
