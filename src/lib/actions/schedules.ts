@@ -18,6 +18,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireLeaderOf, requireSession } from "@/lib/auth/session";
 import { friendlyError, type ActionState } from "./types";
 import { formatDay, hhmm } from "@/lib/format";
+import { sendWhatsApp, whatsappConfigured } from "@/lib/whatsapp";
 
 export type ScheduleState = ActionState & { warning?: string };
 
@@ -103,6 +104,30 @@ export async function removeSchedule(id: string, ministryId: string): Promise<Ac
   return { ok: "Removido da escala." };
 }
 
+/** Avisa cada escalado por WhatsApp que foi publicado; registra em notification_log. */
+async function notifyPublished(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  rows: {
+    id: string;
+    member: { profile: { phone: string | null; full_name: string } | null } | null;
+    role: { name: string } | null;
+    event: { title: string; event_date: string; start_time: string } | null;
+    ministry: { name: string } | null;
+  }[]
+) {
+  if (!whatsappConfigured()) return;
+  for (const r of rows) {
+    const phone = r.member?.profile?.phone;
+    if (!phone || !r.event) continue;
+    const first = (r.member?.profile?.full_name ?? "").split(" ")[0];
+    const text = `Oi${first ? " " + first : ""}! Você foi escalado(a) para *${r.event.title}* em ${formatDay(r.event.event_date)} às ${hhmm(r.event.start_time)} (${r.ministry?.name ?? ""} · ${r.role?.name ?? ""}).\n\nResponda *SIM* para confirmar ou *NAO* se não puder ir.`;
+    const sent = await sendWhatsApp(phone, text);
+    await supabase
+      .from("notification_log")
+      .insert({ schedule_id: r.id, kind: "pendente", channel: "whatsapp", ok: sent.ok, error: sent.error ?? null });
+  }
+}
+
 /** Publica todos os rascunhos do ministério naquele evento. */
 export async function publishEvent(ministryId: string, eventId: string): Promise<ActionState> {
   await requireLeaderOf(ministryId);
@@ -113,9 +138,12 @@ export async function publishEvent(ministryId: string, eventId: string): Promise
     .eq("ministry_id", ministryId)
     .eq("event_id", eventId)
     .eq("published", false)
-    .select("id");
+    .select(
+      "id, member:ministry_members(profile:profiles(phone, full_name)), role:ministry_roles(name), event:events(title, event_date, start_time), ministry:ministries(name)"
+    );
   if (error) return { error: friendlyError(error.message) };
   refresh(ministryId);
+  await notifyPublished(supabase, data ?? []);
   return { ok: `Escala publicada (${data?.length ?? 0}). A equipe já pode confirmar.` };
 }
 
