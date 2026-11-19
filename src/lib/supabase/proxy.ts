@@ -45,6 +45,13 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
+
+  // Webhook do WhatsApp (Evolution API): chamado por servidor, sem sessão.
+  // A autenticação é feita na própria rota via ?token=.
+  if (pathname.startsWith("/api/whatsapp/webhook")) {
+    return supabaseResponse;
+  }
+
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
 
   if (!user && !isPublic && pathname !== "/") {
